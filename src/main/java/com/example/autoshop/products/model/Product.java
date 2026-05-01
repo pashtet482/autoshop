@@ -42,7 +42,7 @@ public class Product {
     @Column(name = "sku", nullable = false)
     private String sku;
 
-    @JoinColumn(name = "brands_id")
+    @JoinColumn(name = "brand_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Brand brand;
 
