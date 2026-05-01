@@ -1,6 +1,8 @@
-package com.example.autoshop.products;
+package com.example.autoshop.products.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "products_discounts")
+@Table(name = "products_attributes")
 @NoArgsConstructor
 public class ProductsDiscounts {
     @Id
@@ -20,9 +22,11 @@ public class ProductsDiscounts {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(name = "min_quantity", nullable = false)
-    private Integer minQuantity;
+    @Column(name = "name", nullable = false)
+    @Size(max = 64)
+    @NotBlank
+    private String name;
 
-    @Column(name = "discount_precent", nullable = false)
-    private Integer discountPrecent;
+    @Column(name = "value", nullable = false)
+    private String value;
 }

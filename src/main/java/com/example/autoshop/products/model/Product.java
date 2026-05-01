@@ -1,4 +1,4 @@
-package com.example.autoshop.products;
+package com.example.autoshop.products.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -37,5 +37,15 @@ public class Product {
     private Category category;
 
     @Column(name = "description")
-    private  String description;
+    private String description;
+
+    @Column(name = "sku", nullable = false)
+    private String sku;
+
+    @JoinColumn(name = "brands_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Brand brand;
+
+    @Column(name = "oem_number", nullable = false)
+    private String oemNumber;
 }

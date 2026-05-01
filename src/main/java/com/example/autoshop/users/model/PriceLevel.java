@@ -1,16 +1,16 @@
-package com.example.autoshop.products;
+package com.example.autoshop.users.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "categories")
-@NoArgsConstructor
-public class Category {
+@Table(name = "price_levels")
+public class PriceLevel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -18,4 +18,7 @@ public class Category {
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "ratio", precision = 5, scale = 2, nullable = false)
+    private BigDecimal ratio;
 }

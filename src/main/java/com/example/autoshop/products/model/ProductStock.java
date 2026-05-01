@@ -1,19 +1,17 @@
-package com.example.autoshop.supply;
+package com.example.autoshop.products.model;
 
-import com.example.autoshop.products.Product;
+import com.example.autoshop.supply.model.Warehouse;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-
 @Getter
 @Setter
 @Entity
-@Table(name = "supply_items")
+@Table(name = "products_stock")
 @NoArgsConstructor
-public class SupplyItem {
+public class ProductStock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -29,11 +27,4 @@ public class SupplyItem {
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
-
-    @Column(name = "purchase_price", nullable = false)
-    private BigDecimal purchasePrice;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "supply_id", nullable = false)
-    private Supply supply;
 }

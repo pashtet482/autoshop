@@ -1,4 +1,4 @@
-package com.example.autoshop.supply;
+package com.example.autoshop.products.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -10,19 +10,21 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "warehouses")
+@Table(name = "brands")
 @NoArgsConstructor
-public class Warehouse {
+public class Brand {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "address", nullable = false)
-    private String address;
+    @Column(name = "name", nullable = false, unique = true)
+    @Size(max = 128)
+    @NotBlank
+    private String name;
 
     @NotBlank
-    @Size(max = 15)
-    @Column(name = "phone", nullable = false)
-    private String phone;
+    @Size(max = 64)
+    @Column(name = "country", nullable = false)
+    private String country;
 }

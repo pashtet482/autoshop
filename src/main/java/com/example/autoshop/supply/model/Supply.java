@@ -1,4 +1,4 @@
-package com.example.autoshop.supply;
+package com.example.autoshop.supply.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;

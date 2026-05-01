@@ -1,6 +1,6 @@
-package com.example.autoshop.orders;
+package com.example.autoshop.orders.model;
 
-import com.example.autoshop.users.User;
+import com.example.autoshop.users.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

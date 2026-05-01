@@ -1,4 +1,4 @@
-package com.example.autoshop.users;
+package com.example.autoshop.users.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -55,4 +55,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private UserRole role;
+
+
 }
