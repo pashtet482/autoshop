@@ -1,12 +1,11 @@
 package com.example.autoshop.products.controller;
 
-import com.example.autoshop.products.dto.GetProductsList;
+import com.example.autoshop.products.dto.ProductDTO;
 import com.example.autoshop.products.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,7 +17,29 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping("/products")
-    public ResponseEntity<List<GetProductsList>> getAllProducts(){
+    public ResponseEntity<List<ProductDTO>> getAllProducts(){
         return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+    @GetMapping("/products/{id}")
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable("id") Long id){
+        return ResponseEntity.ok(productService.getProductById(id));
+    }
+
+    @PostMapping("/products")
+    public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO dto){
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(dto));
+    }
+
+    @PutMapping("/products/{id}")
+    public ResponseEntity<ProductDTO> updateProduct(@RequestBody ProductDTO dto,
+                              @PathVariable("id") Long id){
+        return ResponseEntity.ok( productService.updateProduct(dto, id));
+    }
+
+    @DeleteMapping("/products/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id){
+        productService.deleteProduct(id);
+        return ResponseEntity.status(204).build();
     }
 }

@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
 /**
 * DTO for {@link com.example.autoshop.products.model.Product}
 */
-public record GetProductsList(
+public record ProductDTO(
         Long id,
         String name,
         BigDecimal sellingPrice,

@@ -1,8 +1,12 @@
 package com.example.autoshop.products.service;
 
-import com.example.autoshop.products.dto.GetProductsList;
+import com.example.autoshop.products.ProductMapper;
+import com.example.autoshop.products.dto.ProductDTO;
+import com.example.autoshop.products.model.Product;
 import com.example.autoshop.products.repository.ProductRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,8 +16,34 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
-    public List<GetProductsList> getAllProducts(){
-        return productRepository.findBy();
+    public List<ProductDTO> getAllProducts(){
+        return productRepository.findAllBy();
+    }
+
+    public ProductDTO getProductById(Long id){
+        return productRepository.findProjectedById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+    }
+
+    public ProductDTO createProduct(ProductDTO dto){
+        Product product = productMapper.toEntity(dto);
+        productRepository.save(product);
+        return productMapper.toDto(product);
+    }
+
+    public ProductDTO updateProduct(@NonNull ProductDTO dto, Long id){
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        productMapper.updateProduct(dto, product);
+        productRepository.save(product);
+        return productMapper.toDto(product);
+    }
+
+    public void deleteProduct(Long id){
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        productRepository.delete(product);
     }
 }
