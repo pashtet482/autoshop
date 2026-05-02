@@ -23,8 +23,7 @@ public class ProductService {
     }
 
     public ProductDTO getProductById(Long id){
-        return productRepository.findProjectedById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        return productMapper.toDto(findProductById(id));
     }
 
     public ProductDTO createProduct(ProductDTO dto){
@@ -34,16 +33,19 @@ public class ProductService {
     }
 
     public ProductDTO updateProduct(@NonNull ProductDTO dto, Long id){
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        Product product = findProductById(id);
         productMapper.updateProduct(dto, product);
         productRepository.save(product);
         return productMapper.toDto(product);
     }
 
     public void deleteProduct(Long id){
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
+        Product product = findProductById(id);
         productRepository.delete(product);
+    }
+
+    private @NonNull Product findProductById(Long id){
+        return productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
     }
 }
