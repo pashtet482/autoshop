@@ -1,8 +1,5 @@
 package com.example.autoshop.products.dto;
 
-import com.example.autoshop.products.model.Brand;
-import com.example.autoshop.products.model.Category;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;

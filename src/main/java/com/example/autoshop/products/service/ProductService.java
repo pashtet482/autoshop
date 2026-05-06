@@ -5,8 +5,6 @@ import com.example.autoshop.products.dto.ProductDTO;
 import com.example.autoshop.products.dto.ProductSearchFilterDTO;
 import com.example.autoshop.products.model.Product;
 import com.example.autoshop.products.model.QProduct;
-import com.example.autoshop.products.model.QProductAttribute;
-import com.example.autoshop.products.model.QProductStock;
 import com.example.autoshop.products.repository.ProductRepository;
 import com.querydsl.core.BooleanBuilder;
 import jakarta.persistence.EntityNotFoundException;
