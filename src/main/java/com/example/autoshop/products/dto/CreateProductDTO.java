@@ -3,16 +3,14 @@ package com.example.autoshop.products.dto;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
-* DTO for {@link com.example.autoshop.products.model.Product}
-*/
-public record ProductDTO(
-        Long id,
+public record CreateProductDTO(
         String name,
         BigDecimal sellingPrice,
-        CategoryDTO category,
+        Long categoryId,
         String description,
         String sku,
-        BrandDTO brand,
+        Long brandId,
         String oemNumber,
-        List<ProductAttributeDTO> attributes) {}
+        List<ProductAttributeDTO> attributes
+) {
+}

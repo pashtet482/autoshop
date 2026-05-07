@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,9 +30,6 @@ public class Product {
     @Column(name = "selling_price", nullable = false)
     private BigDecimal sellingPrice;
 
-    @Column(name = "last_supply_date")
-    private OffsetDateTime lastSupplyDate;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
@@ -51,9 +47,9 @@ public class Product {
     @Column(name = "oem_number", nullable = false)
     private String oemNumber;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ProductAttribute> attributes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<ProductStock> stocks = new ArrayList<>();
 }
