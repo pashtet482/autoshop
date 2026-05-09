@@ -1,4 +1,4 @@
-package com.example.autoshop.products;
+package com.example.autoshop.products.mapper;
 
 import com.example.autoshop.products.dto.CreateProductDTO;
 import com.example.autoshop.products.dto.ProductDTO;

@@ -1,6 +1,6 @@
 package com.example.autoshop.products.service;
 
-import com.example.autoshop.products.ProductMapper;
+import com.example.autoshop.products.mapper.ProductMapper;
 import com.example.autoshop.products.dto.*;
 import com.example.autoshop.products.model.*;
 import com.example.autoshop.products.repository.BrandRepository;
