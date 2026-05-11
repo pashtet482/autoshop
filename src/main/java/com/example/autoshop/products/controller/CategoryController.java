@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -34,5 +36,10 @@ public class CategoryController {
     public ResponseEntity<Void> deleteCategory(@PathVariable("id") Long id){
         categoryService.deleteCategory(id);
         return ResponseEntity.status(204).build();
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
+        return ResponseEntity.ok(categoryService.getAllCategories());
     }
 }

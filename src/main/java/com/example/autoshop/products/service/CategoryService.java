@@ -10,6 +10,8 @@ import lombok.AllArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class CategoryService {
@@ -46,5 +48,11 @@ public class CategoryService {
     public void deleteCategory(Long id){
         Category category = findCategoryById(id);
         categoryRepository.delete(category);
+    }
+
+    public List<CategoryDTO> getAllCategories(){
+        return categoryRepository.findAll().stream()
+                .map(categoryMapper::toDto)
+                .toList();
     }
 }
