@@ -1,8 +1,8 @@
 package com.example.autoshop.products.mapper;
 
-import com.example.autoshop.products.dto.CategoryDTO;
-import com.example.autoshop.products.dto.InputCategoryDto;
-import com.example.autoshop.products.model.Category;
+import com.example.autoshop.products.dto.BrandDTO;
+import com.example.autoshop.products.dto.InputBrandDTO;
+import com.example.autoshop.products.model.Brand;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -10,13 +10,12 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring",
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface CategoryMapper {
+public interface BrandMapper {
+    @Mapping(target = "id", ignore = true)
+    Brand toEntity(InputBrandDTO dto);
+
+    BrandDTO toDto(Brand brand);
 
     @Mapping(target = "id", ignore = true)
-    Category toEntity(InputCategoryDto dto);
-
-    CategoryDTO toDto(Category category);
-
-    @Mapping(target = "id", ignore = true)
-    void updateCategory(InputCategoryDto dto, @MappingTarget Category category);
+    void updateBrand(InputBrandDTO dto, @MappingTarget Brand brand);
 }

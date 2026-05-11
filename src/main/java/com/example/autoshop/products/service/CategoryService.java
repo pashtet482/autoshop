@@ -27,8 +27,7 @@ public class CategoryService {
     }
 
     public CategoryDTO getCategoryById(Long id){
-        Category category = findCategoryById(id);
-        return categoryMapper.toDto(category);
+        return categoryMapper.toDto(findCategoryById(id));
     }
 
     private @NonNull Category findCategoryById(Long id){
@@ -38,7 +37,7 @@ public class CategoryService {
 
     public CategoryDTO updateCategory(@NonNull Long id, InputCategoryDto dto){
         Category category = findCategoryById(id);
-        categoryMapper.updateProduct(dto, category);
+        categoryMapper.updateCategory(dto, category);
 
         Category updatedCategory = categoryRepository.save(category);
 
