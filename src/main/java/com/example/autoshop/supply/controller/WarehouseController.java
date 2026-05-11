@@ -1,8 +1,8 @@
-package com.example.autoshop.products.controller;
+package com.example.autoshop.supply.controller;
 
-import com.example.autoshop.products.dto.InputWarehouseDTO;
-import com.example.autoshop.products.dto.WarehouseDTO;
-import com.example.autoshop.products.service.WarehouseService;
+import com.example.autoshop.supply.dto.InputWarehouseDTO;
+import com.example.autoshop.supply.dto.WarehouseDTO;
+import com.example.autoshop.supply.service.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.example.autoshop.products.dto;
+package com.example.autoshop.supply.dto;
 
 public record InputWarehouseDTO(
         String address,

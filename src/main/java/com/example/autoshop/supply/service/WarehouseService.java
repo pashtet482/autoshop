@@ -1,9 +1,9 @@
-package com.example.autoshop.products.service;
+package com.example.autoshop.supply.service;
 
-import com.example.autoshop.products.dto.InputWarehouseDTO;
-import com.example.autoshop.products.dto.WarehouseDTO;
-import com.example.autoshop.products.mapper.WarehouseMapper;
-import com.example.autoshop.products.repository.WarehouseRepository;
+import com.example.autoshop.supply.dto.InputWarehouseDTO;
+import com.example.autoshop.supply.dto.WarehouseDTO;
+import com.example.autoshop.supply.mapper.WarehouseMapper;
+import com.example.autoshop.supply.repository.WarehouseRepository;
 import com.example.autoshop.supply.model.Warehouse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;

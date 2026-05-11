@@ -1,4 +1,4 @@
-package com.example.autoshop.products.repository;
+package com.example.autoshop.supply.repository;
 
 import com.example.autoshop.supply.model.Warehouse;
 import org.springframework.data.jpa.repository.JpaRepository;
