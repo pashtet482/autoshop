@@ -8,6 +8,8 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,6 +26,7 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private OrderStatus orderStatus;
 
@@ -31,7 +34,7 @@ public class Order {
     private OffsetDateTime updatedAt;
 
     @Column(name = "date_of_purchase", nullable = false)
-    private OffsetDateTime dateOfPurchase = OffsetDateTime.now();
+    private OffsetDateTime dateOfPurchase;
 
     @Column(name = "date_of_delivery", nullable = false)
     private OffsetDateTime dateOfDelivery;
@@ -41,4 +44,7 @@ public class Order {
 
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<ProductInOrder> items = new ArrayList<>();
 }

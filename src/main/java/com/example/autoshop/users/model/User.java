@@ -56,5 +56,7 @@ public class User {
     @Column(name = "role", nullable = false)
     private UserRole role;
 
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "price_level_id")
+    private PriceLevel priceLevel;
 }
