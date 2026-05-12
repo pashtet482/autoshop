@@ -20,4 +20,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleIntegrityViolation(@NonNull DataIntegrityViolationException ex){
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
+
+    @ExceptionHandler(WrongPasswordException.class)
+    public ResponseEntity<String> handleWrongPassword(
+            @NonNull WrongPasswordException ex
+    ) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
 }
