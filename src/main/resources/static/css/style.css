@@ -653,11 +653,20 @@ tr:last-child td {
     font-weight: 800;
 }
 
+.attribute-editor {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) minmax(180px, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 10px;
+}
+
 @media (max-width: 860px) {
     .header__inner,
     .layout,
     .page-title,
     .supply-item,
+    .attribute-editor,
     .cart-item {
         grid-template-columns: 1fr;
     }

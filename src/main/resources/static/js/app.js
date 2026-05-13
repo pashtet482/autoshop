@@ -272,6 +272,31 @@ function fillSelect(id, items, label, selected) {
     }).join('');
 }
 
+function addProductAttributeRow(attribute = {}) {
+    const container = document.getElementById('productAttributes');
+    if (!container) return;
+
+    const row = document.createElement('div');
+    row.className = 'attribute-editor';
+    row.innerHTML = `
+        <input name="attributeName" placeholder="Название" value="${esc(attribute.name || '')}">
+        <input name="attributeValue" placeholder="Значение" value="${esc(attribute.value || '')}">
+        <button class="btn danger" type="button">Удалить</button>
+    `;
+
+    row.querySelector('button').addEventListener('click', () => row.remove());
+    container.appendChild(row);
+}
+
+function collectProductAttributes() {
+    return [...document.querySelectorAll('#productAttributes .attribute-editor')]
+        .map(row => ({
+            name: row.querySelector('[name="attributeName"]')?.value.trim() || '',
+            value: row.querySelector('[name="attributeValue"]')?.value.trim() || ''
+        }))
+        .filter(attribute => attribute.name);
+}
+
 async function initLogin() {
     if (isLoggedIn()) {
         location.href = 'index.html';
@@ -443,6 +468,7 @@ async function initProductsAdmin() {
 
     document.getElementById('productForm')?.addEventListener('submit', saveProduct);
     document.getElementById('createProduct')?.addEventListener('click', () => editProduct());
+    document.getElementById('addProductAttribute')?.addEventListener('click', () => addProductAttributeRow());
 }
 
 async function loadProductsAdmin() {
@@ -475,6 +501,10 @@ async function editProduct(id) {
     form.reset();
     document.getElementById('productId').value = '';
     document.getElementById('productModalTitle').textContent = id ? 'Редактирование товара' : 'Новый товар';
+    const attributesContainer = document.getElementById('productAttributes');
+    if (attributesContainer) {
+        attributesContainer.innerHTML = '';
+    }
 
     if (id) {
         const product = await apiGet(`/products/${id}`);
@@ -490,6 +520,11 @@ async function editProduct(id) {
         const preview = document.getElementById('productImagePreview');
         if (preview) preview.innerHTML = imageUrl ? `<img src="${esc(imageUrl)}" style="max-width:140px;">` : '';
         form.description.value = product.description || '';
+        (product.attributes || []).forEach(attribute => addProductAttributeRow(attribute));
+    }
+
+    if (attributesContainer && !attributesContainer.children.length) {
+        addProductAttributeRow();
     }
 
     form.imageFile.value = '';
@@ -523,7 +558,7 @@ async function saveProduct(event) {
         oemNumber: form.oemNumber.value.trim(),
         imageUrl: file ? null : (form.currentImageUrl ? form.currentImageUrl.value.trim() : ''),
         description: form.description.value.trim(),
-        attributes: []
+        attributes: collectProductAttributes()
     };
 
     const saved = await (id ? apiPut(`/products/${id}`, payload) : apiPost('/products', payload));
