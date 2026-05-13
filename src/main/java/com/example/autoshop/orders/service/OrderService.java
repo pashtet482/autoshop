@@ -23,6 +23,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -43,9 +45,13 @@ public class OrderService {
     private final UserRepository userRepository;
 
     @Transactional
-    public OrderDTO createOrder(@NonNull InputOrderDTO dto) {
+    public OrderDTO createOrder(@NonNull InputOrderDTO dto,
+                                String currentUsername,
+                                boolean adminMode) {
 
-        User user = findUserById(dto.userId());
+        User user = adminMode && dto.userId() != null
+                ? findUserById(dto.userId())
+                : findUserByUsername(currentUsername);
 
         Order order = orderMapper.toEntity(dto);
 
@@ -140,19 +146,19 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public OrderDTO getOrderById(Long id) {
+    public OrderDTO getOrderById(Long id,
+                                 String currentUsername,
+                                 boolean adminMode) {
 
-        return orderRepository.findById(id)
-                .map(orderMapper::toDto)
-                .orElseThrow(() ->
-                        new RuntimeException("Заказ не найден")
-                );
+        return orderMapper.toDto(findAccessibleOrder(id, currentUsername, adminMode));
     }
 
     @Transactional(readOnly = true)
     public Page<OrderDTO> getAllOrders(
             int page,
-            int size
+            int size,
+            String currentUsername,
+            boolean adminMode
     ) {
 
         Pageable pageable = PageRequest.of(
@@ -161,7 +167,9 @@ public class OrderService {
                 Sort.by("id").descending()
         );
 
-        return orderRepository.findAll(pageable)
+        return (adminMode
+                ? orderRepository.findAll(pageable)
+                : orderRepository.findAllByUser_Username(currentUsername, pageable))
                 .map(orderMapper::toDto);
     }
 
@@ -172,7 +180,7 @@ public class OrderService {
 
         Order order = orderRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Заказ не найден")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден")
                 );
 
         order.setOrderStatus(status);
@@ -186,7 +194,7 @@ public class OrderService {
     public void deleteOrder(Long id) {
 
         if (!orderRepository.existsById(id)) {
-            throw new RuntimeException("Заказ не найден");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден");
         }
 
         orderRepository.deleteById(id);
@@ -196,7 +204,14 @@ public class OrderService {
 
         return userRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Пользователь не найден")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден")
+                );
+    }
+
+    private User findUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден")
                 );
     }
 
@@ -204,7 +219,22 @@ public class OrderService {
 
         return productRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Товар не найден")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Товар не найден")
                 );
+    }
+
+    private Order findAccessibleOrder(Long id,
+                                      String currentUsername,
+                                      boolean adminMode) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден")
+                );
+
+        if (!adminMode && !order.getUser().getUsername().equals(currentUsername)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден");
+        }
+
+        return order;
     }
 }

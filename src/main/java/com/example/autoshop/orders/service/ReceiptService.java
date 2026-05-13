@@ -7,6 +7,8 @@ import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.io.ByteArrayOutputStream;
 import java.time.format.DateTimeFormatter;
@@ -17,12 +19,11 @@ public class ReceiptService {
 
     private final OrderRepository orderRepository;
 
-    public byte[] generateReceipt(Long orderId) {
+    public byte[] generateReceipt(Long orderId,
+                                  String currentUsername,
+                                  boolean adminMode) {
 
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() ->
-                        new RuntimeException("Order not found")
-                );
+        Order order = findAccessibleOrder(orderId, currentUsername, adminMode);
 
         String html = buildHtml(order);
 
@@ -182,5 +183,20 @@ public class ReceiptService {
                 itemsHtml.toString(),
                 order.getTotalPrice()
         );
+    }
+
+    private Order findAccessibleOrder(Long orderId,
+                                      String currentUsername,
+                                      boolean adminMode) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new RuntimeException("Order not found")
+                );
+
+        if (!adminMode && !order.getUser().getUsername().equals(currentUsername)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
+        }
+
+        return order;
     }
 }

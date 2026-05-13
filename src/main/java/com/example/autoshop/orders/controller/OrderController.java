@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,29 +24,35 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<OrderDTO> createOrder(
+            Authentication authentication,
             @RequestBody InputOrderDTO dto
     ) {
+        boolean adminMode = isAdmin(authentication);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(orderService.createOrder(dto));
+                .body(orderService.createOrder(dto, authentication.getName(), adminMode));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderDTO> getOrder(
+            Authentication authentication,
             @PathVariable Long id
     ) {
+        boolean adminMode = isAdmin(authentication);
         return ResponseEntity.ok(
-                orderService.getOrderById(id)
+                orderService.getOrderById(id, authentication.getName(), adminMode)
         );
     }
 
     @GetMapping
     public ResponseEntity<Page<OrderDTO>> getOrders(
+            Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
+        boolean adminMode = isAdmin(authentication);
         return ResponseEntity.ok(
-                orderService.getAllOrders(page, size)
+                orderService.getAllOrders(page, size, authentication.getName(), adminMode)
         );
     }
 
@@ -70,10 +77,12 @@ public class OrderController {
 
     @GetMapping("/{id}/receipt")
     public ResponseEntity<byte[]> generateReceipt(
+            Authentication authentication,
             @PathVariable Long id
     ) {
+        boolean adminMode = isAdmin(authentication);
 
-        byte[] pdf = receiptService.generateReceipt(id);
+        byte[] pdf = receiptService.generateReceipt(id, authentication.getName(), adminMode);
 
         return ResponseEntity.ok()
                 .header(
@@ -82,6 +91,12 @@ public class OrderController {
                 )
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return authentication.getAuthorities()
+                .stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 }
 

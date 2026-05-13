@@ -174,6 +174,29 @@ textarea {
     gap: 18px;
 }
 
+.profile-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+}
+
+.profile-layout > .panel {
+    height: 100%;
+}
+
+.profile-layout .form-panel,
+.profile-layout .form-panel form {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-layout .form-panel form {
+    flex: 1;
+}
+
+.profile-layout .notice {
+    margin-top: auto;
+}
+
 .panel {
     background: var(--panel);
     border: 1px solid var(--line);
@@ -492,6 +515,30 @@ table {
     width: 100%;
     min-width: 720px;
     border-collapse: collapse;
+}
+
+#productsTable th:last-child,
+#productsTable td:last-child {
+    width: 1%;
+    white-space: nowrap;
+}
+
+#productsTable td:nth-child(7) {
+    white-space: nowrap;
+    color: #dce5ee;
+    font-variant-numeric: tabular-nums;
+}
+
+#productsTable td:last-child .actions {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+#productsTable td:last-child .btn {
+    min-height: 36px;
+    padding: 8px 14px;
+    font-size: 14px;
 }
 
 th,
