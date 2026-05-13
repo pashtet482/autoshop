@@ -5,6 +5,7 @@ import com.example.autoshop.users.dto.InputUserDTO;
 import com.example.autoshop.users.dto.UserDTO;
 import com.example.autoshop.users.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,16 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getCurrentUser(
+            Authentication authentication
+    ) {
+
+        return ResponseEntity.ok(
+                userService.getUserByUsername(authentication.getName())
+        );
+    }
 
     @PostMapping
     public ResponseEntity<UserDTO> createUser(

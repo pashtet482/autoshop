@@ -10,7 +10,10 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring",
-        uses = ProductAttributeMapper.class,
+        uses = {
+                ProductAttributeMapper.class,
+                ProductStockMapper.class
+        },
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ProductMapper{
     @Mapping(target = "category", ignore = true)

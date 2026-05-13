@@ -10,6 +10,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -17,6 +18,24 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring().requestMatchers(
+                "/",
+                "/index.html",
+                "/login.html",
+                "/products.html",
+                "/orders.html",
+                "/supplies.html",
+                "/warehouses.html",
+                "/users.html",
+                "/cart.html",
+                "/profile.html",
+                "/css/**",
+                "/js/**"
+        );
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -30,7 +49,19 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/",
+                                "/index.html",
+                                "/login.html",
+                                "/products.html",
+                                "/orders.html",
+                                "/supplies.html",
+                                "/warehouses.html",
+                                "/users.html",
+                                "/cart.html",
+                                "/profile.html",
+                                "/css/**",
+                                "/js/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET,
@@ -38,8 +69,14 @@ public class SecurityConfig {
                                 "/api/categories/**",
                                 "/api/brands/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/products/search"
+                        ).permitAll()
                         .requestMatchers(
                                 "/api/users/*/change-password"
+                        ).hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(
+                                "/api/users/me"
                         ).hasAnyRole("USER", "ADMIN")
                         .requestMatchers(
                                 "/api/supplies/**",
@@ -64,7 +101,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config
+            @NonNull AuthenticationConfiguration config
     ) throws Exception {
 
         return config.getAuthenticationManager();

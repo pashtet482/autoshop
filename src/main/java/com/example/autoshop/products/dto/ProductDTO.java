@@ -15,4 +15,5 @@ public record ProductDTO(
         String sku,
         BrandDTO brand,
         String oemNumber,
-        List<ProductAttributeDTO> attributes) {}
+        List<ProductAttributeDTO> attributes,
+        List<ProductStockDTO> stocks) {}

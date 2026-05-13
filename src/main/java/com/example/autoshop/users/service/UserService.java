@@ -59,6 +59,16 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
+    public UserDTO getUserByUsername(String username) {
+
+        return userRepository.findByUsername(username)
+                .map(userMapper::toDto)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+    }
+
+    @Transactional(readOnly = true)
     public Page<UserDTO> getAllUsers(
             int page,
             int size

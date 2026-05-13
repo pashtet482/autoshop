@@ -8,6 +8,7 @@ import java.util.Map;
  * DTO for {@link com.example.autoshop.products.model.Product}
  */
 public record ProductSearchFilterDTO(
+        String query,
         String name,
         BigDecimal minPrice,
         BigDecimal maxPrice,

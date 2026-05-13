@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина - AutoShop</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="cart">
+    <header class="header">
+        <div class="header__inner">
+            <a class="logo" href="index.html"><span class="logo__mark">A</span><span>AutoShop</span></a>
+            <nav class="nav">
+                <a href="index.html">Каталог</a><a href="orders.html">Заказы</a><a href="products.html" data-admin-only hidden>Товары</a><a href="supplies.html" data-admin-only hidden>Поставки</a><a href="warehouses.html" data-admin-only hidden>Склады</a><a href="users.html" data-admin-only hidden>Пользователи</a>
+            </nav>
+            <div class="header__actions"><a class="btn secondary cart-button" href="cart.html">Корзина <span data-cart-count hidden>0</span></a><button class="btn ghost" onclick="logout()">Выход</button></div>
+        </div>
+    </header>
+    <main class="page">
+        <div class="page-title"><div><h1>Корзина</h1><p>Проверьте позиции и оформите заказ.</p></div></div>
+        <div class="panel" id="cartList"></div>
+        <div class="cart-total"><span>Итого</span><span id="cartTotal">0 ₽</span></div>
+        <div class="actions" style="margin-top:14px"><button class="btn" id="openCheckout">Оформить заказ</button><a class="btn secondary" href="index.html">Продолжить покупки</a></div>
+    </main>
+    <div class="modal" id="checkoutModal">
+        <div class="modal__content">
+            <div class="modal__head"><h2>Оформление заказа</h2><button class="btn secondary" data-close-modal="checkoutModal">Закрыть</button></div>
+            <form id="checkoutForm">
+                <div class="field"><label>Адрес доставки</label><textarea id="deliveryAddress" required></textarea></div>
+                <button class="btn" type="submit">Подтвердить заказ</button>
+            </form>
+        </div>
+    </div>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

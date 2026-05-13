@@ -3,6 +3,7 @@ package com.example.autoshop.users.dto;
 import com.example.autoshop.users.model.UserRole;
 
 public record UserDTO(
+        Long id,
         String username,
         String email,
         String deliveryAddress,

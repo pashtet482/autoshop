@@ -90,7 +90,24 @@ public class ProductService {
         QProduct product = QProduct.product;
         BooleanBuilder builder = new BooleanBuilder();
 
-        if (filter.name() != null && !filter.name().isBlank()) {
+        String commonQuery = null;
+        if (filter.query() != null && !filter.query().isBlank()) {
+            commonQuery = filter.query();
+        } else if (filter.name() != null && !filter.name().isBlank()
+                && filter.name().equals(filter.sku())
+                && filter.name().equals(filter.oemNumber())) {
+            commonQuery = filter.name();
+        }
+
+        if (commonQuery != null) {
+            builder.and(
+                    product.name.containsIgnoreCase(commonQuery)
+                            .or(product.sku.containsIgnoreCase(commonQuery))
+                            .or(product.oemNumber.containsIgnoreCase(commonQuery))
+            );
+        }
+
+        if (commonQuery == null && filter.name() != null && !filter.name().isBlank()) {
             builder.and(product.name.containsIgnoreCase(filter.name()));
         }
 
@@ -110,11 +127,11 @@ public class ProductService {
             builder.and(product.brand.id.eq(filter.brandId()));
         }
 
-        if (filter.sku() != null && !filter.sku().isBlank()) {
+        if (commonQuery == null && filter.sku() != null && !filter.sku().isBlank()) {
             builder.and(product.sku.containsIgnoreCase(filter.sku()));
         }
 
-        if (filter.oemNumber() != null && !filter.oemNumber().isBlank()) {
+        if (commonQuery == null && filter.oemNumber() != null && !filter.oemNumber().isBlank()) {
             builder.and(product.oemNumber.containsIgnoreCase(filter.oemNumber()));
         }
 
