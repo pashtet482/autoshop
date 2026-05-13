@@ -4,9 +4,12 @@ import com.example.autoshop.orders.dto.InputOrderDTO;
 import com.example.autoshop.orders.dto.OrderDTO;
 import com.example.autoshop.orders.model.OrderStatus;
 import com.example.autoshop.orders.service.OrderService;
+import com.example.autoshop.orders.service.ReceiptService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderService orderService;
+    private final ReceiptService receiptService;
 
     @PostMapping
     public ResponseEntity<OrderDTO> createOrder(
@@ -62,6 +66,22 @@ public class OrderController {
         orderService.deleteOrder(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/receipt")
+    public ResponseEntity<byte[]> generateReceipt(
+            @PathVariable Long id
+    ) {
+
+        byte[] pdf = receiptService.generateReceipt(id);
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=receipt.pdf"
+                )
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 }
 
