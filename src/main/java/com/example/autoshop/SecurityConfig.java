@@ -74,17 +74,41 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/api/products/search"
                         ).permitAll()
-                        .requestMatchers(
-                                "/api/users/*/change-password"
-                        ).hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/users/me"
                         ).hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/users/me"
+                        ).hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/users/me/change-password"
+                        ).hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(
+                                "/api/users/*/change-password"
+                        ).hasRole("ADMIN")
                         .requestMatchers(
                                 "/api/supplies/**",
                                 "/api/users/**"
                         ).hasRole("ADMIN")
 
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/orders/**"
+                        ).hasAnyRole(
+                                "USER",
+                                "ADMIN"
+                        )
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/orders"
+                        ).hasAnyRole(
+                                "USER",
+                                "ADMIN"
+                        )
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/orders/**"
+                        ).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/orders/**"
+                        ).hasRole("ADMIN")
                         .requestMatchers(
                                 "/api/orders/**"
                         ).hasAnyRole(
