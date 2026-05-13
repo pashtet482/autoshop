@@ -8,7 +8,7 @@ import com.example.autoshop.products.repository.CategoryRepository;
 import com.example.autoshop.products.repository.ProductRepository;
 import com.querydsl.core.BooleanBuilder;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,15 +18,25 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
+import java.io.IOException;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
+
+    @Value("${app.upload.dir:uploads}")
+    private String uploadDir;
 
     public ProductDTO getProductById(Long id){
         return productMapper.toDto(findProductById(id));
@@ -163,5 +173,37 @@ public class ProductService {
         Page<Product> results = productRepository.findAll(builder, pageable);
 
         return results.map(productMapper::toDto);
+    }
+
+    public ProductDTO uploadProductImage(Long id, MultipartFile file) {
+        Product product = findProductById(id);
+
+        if (file == null || file.isEmpty()) {
+            return productMapper.toDto(product);
+        }
+
+        try {
+            Path uploadsDir = Paths.get(uploadDir).toAbsolutePath().normalize();
+            if (!Files.exists(uploadsDir)) {
+                Files.createDirectories(uploadsDir);
+            }
+
+            String original = file.getOriginalFilename() == null ? "" : file.getOriginalFilename();
+            String ext = "";
+            int idx = original.lastIndexOf('.');
+            if (idx >= 0) ext = original.substring(idx);
+
+            String filename = UUID.randomUUID().toString() + ext;
+            Path target = uploadsDir.resolve(filename);
+            Files.copy(file.getInputStream(), target);
+
+            String relative = "/uploads/" + filename;
+            product.setImageUrl(relative);
+            Product saved = productRepository.save(product);
+            return productMapper.toDto(saved);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store file", e);
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.example.autoshop.users.controller;
 import com.example.autoshop.users.dto.ChangePasswordDTO;
 import com.example.autoshop.users.dto.InputUserDTO;
 import com.example.autoshop.users.dto.UserDTO;
+import com.example.autoshop.users.model.PriceLevel;
 import com.example.autoshop.users.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,29 @@ public class UserController {
                 userService.getUserByUsername(authentication.getName())
         );
     }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserDTO> updateCurrentUser(
+            Authentication authentication,
+            @RequestBody InputUserDTO dto
+    ) {
+
+        return ResponseEntity.ok(
+                userService.updateOwnProfile(authentication.getName(), dto)
+        );
+    }
+
+    @PostMapping("/me/change-password")
+    public ResponseEntity<Void> changeCurrentUserPassword(
+            Authentication authentication,
+            @RequestBody ChangePasswordDTO dto
+    ) {
+
+        userService.changePassword(authentication.getName(), dto);
+
+        return ResponseEntity.ok().build();
+    }
+
 
     @PostMapping
     public ResponseEntity<UserDTO> createUser(
@@ -89,4 +113,26 @@ public class UserController {
 
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/price-levels/all")
+    public ResponseEntity<?> getAllPriceLevels() {
+        return ResponseEntity.ok(userService.getAllPriceLevels());
+    }
+
+        @PostMapping("/price-levels")
+        public ResponseEntity<PriceLevel> createPriceLevel(@RequestBody PriceLevel dto) {
+                PriceLevel created = userService.createPriceLevel(dto);
+                return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        }
+
+        @PutMapping("/price-levels/{id}")
+        public ResponseEntity<PriceLevel> updatePriceLevel(@PathVariable Long id, @RequestBody PriceLevel dto) {
+                return ResponseEntity.ok(userService.updatePriceLevel(id, dto));
+        }
+
+        @DeleteMapping("/price-levels/{id}")
+        public ResponseEntity<Void> deletePriceLevel(@PathVariable Long id) {
+                userService.deletePriceLevel(id);
+                return ResponseEntity.noContent().build();
+        }
 }

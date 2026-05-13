@@ -10,12 +10,12 @@
     <header class="header">
         <div class="header__inner">
             <a class="logo" href="index.html"><span class="logo__mark">A</span><span>AutoShop</span></a>
-            <nav class="nav"><a href="index.html">Каталог</a><a href="orders.html">Заказы</a><a href="products.html">Товары</a><a href="supplies.html">Поставки</a><a href="warehouses.html">Склады</a><a href="users.html">Пользователи</a></nav>
+            <nav class="nav"><a href="index.html">Каталог</a><a href="orders.html">Заказы</a><a href="profile.html">Профиль</a><a href="products.html">Товары</a><a href="supplies.html">Поставки</a><a href="warehouses.html">Склады</a><a href="users.html">Пользователи</a></nav>
             <div class="header__actions"><a class="btn secondary cart-button" href="cart.html">Корзина <span data-cart-count hidden>0</span></a><button class="btn ghost" onclick="logout()">Выход</button></div>
         </div>
     </header>
     <main class="page">
-        <div class="page-title"><div><h1>Пользователи</h1><p>Раздел доступен только администратору.</p></div><button class="btn" id="createUser">Добавить пользователя</button></div>
+        <div class="page-title"><div><h1>Пользователи</h1><p>Раздел доступен только администратору.</p></div><div><button class="btn" id="createUser">Добавить пользователя</button> <button class="btn" id="managePriceLevels">Уровни цен</button></div></div>
         <div class="table-wrap">
             <table id="usersTable">
                 <thead><tr><th>Пользователь</th><th>Email</th><th>Телефон</th><th>Роль</th><th>Действия</th></tr></thead>
@@ -31,7 +31,7 @@
                 <input id="userId" type="hidden">
                 <div class="inline-fields">
                     <div class="field"><label>Логин</label><input name="username" required></div>
-                    <div class="field"><label>Пароль</label><input name="password" type="password"></div>
+                    <div class="field" id="passwordField"><label>Пароль</label><input name="password" type="password"></div>
                 </div>
                 <div class="inline-fields">
                     <div class="field"><label>Email</label><input name="email" type="email" required></div>
@@ -41,7 +41,7 @@
                 <div class="field"><label>Адрес доставки</label><input name="deliveryAddress"></div>
                 <div class="inline-fields">
                     <div class="field"><label>Роль</label><select name="role" required><option value="USER">USER</option><option value="ADMIN">ADMIN</option></select></div>
-                    <div class="field"><label>Price level ID</label><input name="priceLevelId" type="number" min="1" required></div>
+                    <div class="field"><label>Уровень цены</label><select name="priceLevelId" required><option value="">-- Выберите уровень цены --</option></select></div>
                 </div>
                 <button class="btn" type="submit">Сохранить</button>
             </form>

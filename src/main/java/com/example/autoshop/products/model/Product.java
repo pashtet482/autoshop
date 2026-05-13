@@ -52,4 +52,7 @@ public class Product {
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<ProductStock> stocks = new ArrayList<>();
+
+    @Column(name = "image_url")
+    private String imageUrl;
 }

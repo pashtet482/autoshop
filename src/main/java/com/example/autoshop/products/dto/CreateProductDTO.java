@@ -11,6 +11,7 @@ public record CreateProductDTO(
         String sku,
         Long brandId,
         String oemNumber,
-        List<ProductAttributeDTO> attributes
+        List<ProductAttributeDTO> attributes,
+        String imageUrl
 ) {
 }

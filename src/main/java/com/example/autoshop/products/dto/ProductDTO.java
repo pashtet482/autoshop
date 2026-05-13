@@ -15,5 +15,6 @@ public record ProductDTO(
         String sku,
         BrandDTO brand,
         String oemNumber,
+        String imageUrl,
         List<ProductAttributeDTO> attributes,
         List<ProductStockDTO> stocks) {}

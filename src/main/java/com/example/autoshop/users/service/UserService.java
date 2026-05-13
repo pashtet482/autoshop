@@ -113,6 +113,39 @@ public class UserService {
         );
     }
 
+    public UserDTO updateOwnProfile(
+            String username,
+            InputUserDTO dto
+    ) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        if (dto.username() != null && !dto.username().isBlank()) {
+            user.setUsername(dto.username());
+        }
+
+        if (dto.email() != null && !dto.email().isBlank()) {
+            user.setEmail(dto.email());
+        }
+
+        user.setDeliveryAddress(dto.deliveryAddress());
+
+        if (dto.companyName() != null && !dto.companyName().isBlank()) {
+            user.setCompanyName(dto.companyName());
+        }
+
+        if (dto.phone() != null && !dto.phone().isBlank()) {
+            user.setPhone(dto.phone());
+        }
+
+        return userMapper.toDto(
+                userRepository.save(user)
+        );
+    }
+
     public void deleteUser(Long id) {
 
         if (!userRepository.existsById(id)) {
@@ -155,4 +188,41 @@ public class UserService {
 
         userRepository.save(user);
     }
+
+    public void changePassword(
+            String username,
+            @NonNull ChangePasswordDTO dto
+    ) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        changePassword(user.getId(), dto);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<PriceLevel> getAllPriceLevels() {
+        return priceLevelRepository.findAll();
+    }
+
+        public PriceLevel createPriceLevel(PriceLevel dto) {
+                PriceLevel pl = new PriceLevel();
+                pl.setName(dto.getName());
+                pl.setRatio(dto.getRatio());
+                return priceLevelRepository.save(pl);
+        }
+
+        public PriceLevel updatePriceLevel(Long id, PriceLevel dto) {
+                PriceLevel existing = findPriceLevelById(id);
+                existing.setName(dto.getName());
+                existing.setRatio(dto.getRatio());
+                return priceLevelRepository.save(existing);
+        }
+
+        public void deletePriceLevel(Long id) {
+                if (!priceLevelRepository.existsById(id)) throw new RuntimeException("Price level not found");
+                priceLevelRepository.deleteById(id);
+        }
 }

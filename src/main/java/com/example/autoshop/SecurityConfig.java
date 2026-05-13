@@ -32,6 +32,7 @@ public class SecurityConfig {
                 "/users.html",
                 "/cart.html",
                 "/profile.html",
+                "/uploads/**",
                 "/css/**",
                 "/js/**"
         );
@@ -60,6 +61,7 @@ public class SecurityConfig {
                                 "/users.html",
                                 "/cart.html",
                                 "/profile.html",
+                                "/uploads/**",
                                 "/css/**",
                                 "/js/**"
                         ).permitAll()

@@ -2,10 +2,51 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=index.html">
-    <title>AutoShop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль - AutoShop</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-    <a href="index.html">Перейти в каталог</a>
+<body data-page="profile">
+    <header class="header">
+        <div class="header__inner">
+            <a class="logo" href="index.html"><span class="logo__mark">A</span><span>AutoShop</span></a>
+            <nav class="nav">
+                <a href="index.html">Каталог</a><a href="orders.html">Заказы</a><a href="profile.html">Профиль</a><a href="products.html" data-admin-only hidden>Товары</a><a href="supplies.html" data-admin-only hidden>Поставки</a><a href="warehouses.html" data-admin-only hidden>Склады</a><a href="users.html" data-admin-only hidden>Пользователи</a>
+            </nav>
+            <div class="header__actions"><a class="btn secondary cart-button" href="cart.html">Корзина <span data-cart-count hidden>0</span></a><button class="btn ghost" onclick="logout()">Выход</button></div>
+        </div>
+    </header>
+    <main class="page">
+        <div class="page-title"><div><h1>Профиль</h1><p>Личные данные и отдельная смена пароля.</p></div></div>
+        <div class="layout">
+            <section class="panel form-panel">
+                <h2>Данные пользователя</h2>
+                <form id="profileForm">
+                    <div class="inline-fields">
+                        <div class="field"><label>Логин</label><input name="username" required></div>
+                        <div class="field"><label>Email</label><input name="email" type="email" required></div>
+                    </div>
+                    <div class="inline-fields">
+                        <div class="field"><label>Компания</label><input name="companyName" required></div>
+                        <div class="field"><label>Телефон</label><input name="phone" required></div>
+                    </div>
+                    <div class="field"><label>Адрес доставки</label><input name="deliveryAddress"></div>
+                    <button class="btn" type="submit">Сохранить данные</button>
+                    <div class="notice" id="profileMessage" hidden></div>
+                </form>
+            </section>
+            <section class="panel form-panel">
+                <h2>Смена пароля</h2>
+                <form id="passwordForm">
+                    <div class="field"><label>Старый пароль</label><input name="oldPassword" type="password" required></div>
+                    <div class="field"><label>Новый пароль</label><input name="newPassword" type="password" minlength="4" required></div>
+                    <button class="btn" type="submit">Сменить пароль</button>
+                    <div class="notice" id="passwordMessage" hidden></div>
+                </form>
+            </section>
+        </div>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>

@@ -38,6 +38,24 @@ function money(value) {
     return rub.format(Number(value || 0));
 }
 
+function getProductImage(product) {
+    return product.imageUrl || '';
+}
+
+function productMediaHtml(product, extraStyle = '') {
+    const imageUrl = getProductImage(product);
+    return `
+        <div class="product-card__media" ${extraStyle ? `style="${extraStyle}"` : ''}>
+            ${imageUrl ? `<img src="${esc(imageUrl)}" alt="${esc(product.name)}">` : ''}
+        </div>
+    `;
+}
+
+function productThumbHtml(product) {
+    const imageUrl = getProductImage(product);
+    return `<div class="product-thumb">${imageUrl ? `<img src="${esc(imageUrl)}" alt="${esc(product.name)}">` : ''}</div>`;
+}
+
 function shortDate(value) {
     return value ? dateFmt.format(new Date(value)) : '-';
 }
@@ -260,7 +278,7 @@ async function initLogin() {
         return;
     }
 
-    document.getElementById('loginForm').addEventListener('submit', async event => {
+    document.getElementById('loginForm')?.addEventListener('submit', async event => {
         event.preventDefault();
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
@@ -285,17 +303,17 @@ async function initCatalog() {
     fillSelect('filterCategory', state.categories, 'Все категории');
     fillSelect('filterBrand', state.brands, 'Все бренды');
 
-    document.getElementById('filterForm').addEventListener('submit', event => {
+    document.getElementById('filterForm')?.addEventListener('submit', event => {
         event.preventDefault();
         state.page = 0;
         loadCatalog();
     });
-    document.getElementById('resetFilters').addEventListener('click', () => {
-        document.getElementById('filterForm').reset();
+    document.getElementById('resetFilters')?.addEventListener('click', () => {
+        document.getElementById('filterForm')?.reset();
         state.page = 0;
         loadCatalog();
     });
-    document.getElementById('catalogSearch').addEventListener('input', debounce(() => {
+    document.getElementById('catalogSearch')?.addEventListener('input', debounce(() => {
         state.page = 0;
         loadCatalog();
     }));
@@ -305,17 +323,25 @@ async function initCatalog() {
 
 function getProductFilter() {
     const form = document.getElementById('filterForm');
-    const data = new FormData(form);
+    if (!form) return {};
+    const fd = new FormData(form);
+    const query = (fd.get('query') || '').toString().trim() || null;
+    const categoryId = fd.get('categoryId') ? Number(fd.get('categoryId')) : null;
+    const brandId = fd.get('brandId') ? Number(fd.get('brandId')) : null;
+    const minPrice = fd.get('minPrice') ? Number(fd.get('minPrice')) : null;
+    const maxPrice = fd.get('maxPrice') ? Number(fd.get('maxPrice')) : null;
+    const inStock = form.inStock && form.inStock.checked ? true : null;
+
     return {
-        query: data.get('query') || null,
-        name: data.get('name') || null,
-        categoryId: data.get('categoryId') ? Number(data.get('categoryId')) : null,
-        brandId: data.get('brandId') ? Number(data.get('brandId')) : null,
-        sku: data.get('sku') || null,
-        oemNumber: data.get('oemNumber') || null,
-        minPrice: data.get('minPrice') ? Number(data.get('minPrice')) : null,
-        maxPrice: data.get('maxPrice') ? Number(data.get('maxPrice')) : null,
-        inStock: data.get('inStock') === 'on' ? true : null,
+        query: query,
+        name: null,
+        minPrice: minPrice,
+        maxPrice: maxPrice,
+        categoryId: categoryId,
+        brandId: brandId,
+        sku: null,
+        oemNumber: null,
+        inStock: inStock,
         attributes: null
     };
 }
@@ -340,7 +366,7 @@ function displayCatalogProducts(products) {
     const grid = document.getElementById('productGrid');
     grid.innerHTML = products.length ? products.map(product => `
         <article class="product-card">
-            <div class="product-card__media"></div>
+            ${productMediaHtml(product)}
             <div class="product-card__body">
                 <span class="badge">${esc(product.category?.name || 'Запчасть')}</span>
                 <h3>${esc(product.name)}</h3>
@@ -388,7 +414,7 @@ async function showProduct(id) {
     const attributesHtml = renderAttributes(product.attributes);
     const totalStock = getTotalStock(product);
     document.getElementById('productModalBody').innerHTML = `
-        <div class="product-card__media" style="height:150px;border-radius:8px;margin-bottom:16px"></div>
+        ${productMediaHtml(product, 'height:180px;border-radius:8px;margin-bottom:16px')}
         <h2>${esc(product.name)}</h2>
         <p class="price">${money(product.sellingPrice)}</p>
         ${renderStockBadge(product)}
@@ -401,7 +427,7 @@ async function showProduct(id) {
         ${renderDeliveryOptions(product.stocks)}
         <div class="actions"><button class="btn" id="modalAddToCart" ${totalStock <= 0 ? 'disabled' : ''}>Добавить в корзину</button></div>
     `;
-    document.getElementById('modalAddToCart').addEventListener('click', () => {
+    document.getElementById('modalAddToCart')?.addEventListener('click', () => {
         addToCart(product);
         closeModal('productModal');
     });
@@ -415,8 +441,8 @@ async function initProductsAdmin() {
     fillSelect('productBrandId', state.brands, 'Бренд');
     await loadProductsAdmin();
 
-    document.getElementById('productForm').addEventListener('submit', saveProduct);
-    document.getElementById('createProduct').addEventListener('click', () => editProduct());
+    document.getElementById('productForm')?.addEventListener('submit', saveProduct);
+    document.getElementById('createProduct')?.addEventListener('click', () => editProduct());
 }
 
 async function loadProductsAdmin() {
@@ -425,6 +451,7 @@ async function loadProductsAdmin() {
     const rows = getPageContent(page).map(product => `
         <tr>
             <td>${product.id}</td>
+            <td>${productThumbHtml(product)}</td>
             <td><strong>${esc(product.name)}</strong><div class="meta">${esc(product.description || '')}</div></td>
             <td>${money(product.sellingPrice)}</td>
             <td>${esc(product.category?.name || '-')}</td>
@@ -437,7 +464,7 @@ async function loadProductsAdmin() {
         </tr>
     `).join('');
 
-    document.querySelector('#productsTable tbody').innerHTML = rows || '<tr><td colspan="7">Товаров пока нет.</td></tr>';
+    document.querySelector('#productsTable tbody').innerHTML = rows || '<tr><td colspan="8">Товаров пока нет.</td></tr>';
     document.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => editProduct(btn.dataset.edit)));
     document.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteProduct(btn.dataset.delete)));
     renderPagination('productsPagination', loadProductsAdmin);
@@ -458,8 +485,26 @@ async function editProduct(id) {
         form.brandId.value = product.brand?.id || '';
         form.sku.value = product.sku || '';
         form.oemNumber.value = product.oemNumber || '';
+        const imageUrl = getProductImage(product);
+        if (form.currentImageUrl) form.currentImageUrl.value = imageUrl;
+        const preview = document.getElementById('productImagePreview');
+        if (preview) preview.innerHTML = imageUrl ? `<img src="${esc(imageUrl)}" style="max-width:140px;">` : '';
         form.description.value = product.description || '';
     }
+
+    form.imageFile.value = '';
+    form.imageFile.onchange = () => {
+        const preview = document.getElementById('productImagePreview');
+        const file = form.imageFile.files && form.imageFile.files[0];
+        if (!preview) return;
+        if (!file) {
+            const current = form.currentImageUrl ? form.currentImageUrl.value : '';
+            preview.innerHTML = current ? `<img src="${esc(current)}" style="max-width:140px;">` : '';
+            return;
+        }
+        const url = URL.createObjectURL(file);
+        preview.innerHTML = `<img src="${url}" style="max-width:140px;">`;
+    };
 
     openModal('productEditModal');
 }
@@ -468,6 +513,7 @@ async function saveProduct(event) {
     event.preventDefault();
     const form = event.target;
     const id = document.getElementById('productId').value;
+    const file = form.imageFile.files && form.imageFile.files[0];
     const payload = {
         name: form.name.value.trim(),
         sellingPrice: Number(form.sellingPrice.value),
@@ -475,12 +521,33 @@ async function saveProduct(event) {
         brandId: Number(form.brandId.value),
         sku: form.sku.value.trim(),
         oemNumber: form.oemNumber.value.trim(),
+        imageUrl: file ? null : (form.currentImageUrl ? form.currentImageUrl.value.trim() : ''),
         description: form.description.value.trim(),
         attributes: []
     };
 
-    if (id) await apiPut(`/products/${id}`, payload);
-    else await apiPost('/products', payload);
+    const saved = await (id ? apiPut(`/products/${id}`, payload) : apiPost('/products', payload));
+
+    if (file) {
+        const fd = new FormData();
+        fd.append('file', file);
+        const response = await fetch(`/api/products/${saved.id}/image`, {
+            method: 'POST',
+            headers: {
+                Authorization: getAuthHeaders(false).Authorization
+            },
+            body: fd
+        });
+
+        if (!response.ok) {
+            throw new Error('Не удалось загрузить изображение');
+        }
+
+        const updated = await response.json();
+        if (form.currentImageUrl) {
+            form.currentImageUrl.value = updated.imageUrl || '';
+        }
+    }
 
     closeModal('productEditModal');
     loadProductsAdmin();
@@ -496,9 +563,11 @@ async function initCart() {
     await initShell();
     await refreshCartAvailability();
     renderCart();
-    document.getElementById('checkoutForm').addEventListener('submit', submitOrder);
-    document.getElementById('openCheckout').addEventListener('click', () => {
-        document.getElementById('deliveryAddress').value = state.currentUser?.deliveryAddress || '';
+    document.getElementById('checkoutForm')?.addEventListener('submit', submitOrder);
+    document.getElementById('openCheckout')?.addEventListener('click', () => {
+        if (document.getElementById('deliveryAddress')) {
+            document.getElementById('deliveryAddress').value = state.currentUser?.deliveryAddress || '';
+        }
         openModal('checkoutModal');
     });
 }
@@ -640,8 +709,9 @@ async function loadOrders() {
             <td>${shortDate(order.dateOfPurchase)}</td>
             <td>${shortDate(order.dateOfDelivery)}</td>
             <td>${esc(order.deliveryAddress || '-')}${adminViewingAll ? `<div class="meta">Пользователь ID: ${esc(order.userId)}</div>` : ''}</td>
+            <td><button class="btn secondary" data-receipt="${order.id}">Скачать чек</button></td>
         </tr>
-    `).join('') || '<tr><td colspan="6">Заказов пока нет.</td></tr>';
+    `).join('') || '<tr><td colspan="7">Заказов пока нет.</td></tr>';
 
     document.querySelectorAll('[data-save-status]').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -650,7 +720,32 @@ async function loadOrders() {
             loadOrders();
         });
     });
+    document.querySelectorAll('[data-receipt]').forEach(btn => {
+        btn.addEventListener('click', () => downloadReceipt(btn.dataset.receipt));
+    });
     renderPagination('ordersPagination', loadOrders);
+}
+
+async function downloadReceipt(orderId) {
+    const response = await fetch(`/api/orders/${orderId}/receipt`, {
+        method: 'GET',
+        headers: getAuthHeaders(false)
+    });
+
+    if (!response.ok) {
+        alert('Не удалось скачать чек');
+        return;
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `receipt-${orderId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
 }
 
 async function initSupplies() {
@@ -665,9 +760,9 @@ async function initSupplies() {
     state.warehouses = warehouses;
     state.supplyProducts = getPageContent(productsPage);
     fillSelect('supplierId', state.suppliers, 'Поставщик');
-    document.getElementById('createSupply').addEventListener('click', openSupplyForm);
-    document.getElementById('addSupplyItem').addEventListener('click', addSupplyItem);
-    document.getElementById('supplyForm').addEventListener('submit', saveSupply);
+    document.getElementById('createSupply')?.addEventListener('click', openSupplyForm);
+    document.getElementById('addSupplyItem')?.addEventListener('click', addSupplyItem);
+    document.getElementById('supplyForm')?.addEventListener('submit', saveSupply);
     await loadSupplies();
 }
 
@@ -733,8 +828,8 @@ async function saveSupply(event) {
 
 async function initWarehouses() {
     await initShell(true);
-    document.getElementById('createWarehouse').addEventListener('click', () => editWarehouse());
-    document.getElementById('warehouseForm').addEventListener('submit', saveWarehouse);
+    document.getElementById('createWarehouse')?.addEventListener('click', () => editWarehouse());
+    document.getElementById('warehouseForm')?.addEventListener('submit', saveWarehouse);
     await loadWarehouses();
 }
 
@@ -797,11 +892,67 @@ async function deleteWarehouse(id) {
     loadWarehouses();
 }
 
+function showMessage(id, text) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = false;
+}
+
+function currentPasswordFromStorage() {
+    const credentials = getCredentials();
+    if (!credentials) return '';
+    return credentials.split(':').slice(1).join(':');
+}
+
+async function initProfile() {
+    await initShell();
+    const form = document.getElementById('profileForm');
+    const passwordForm = document.getElementById('passwordForm');
+
+    form.username.value = state.currentUser.username || '';
+    form.email.value = state.currentUser.email || '';
+    form.deliveryAddress.value = state.currentUser.deliveryAddress || '';
+    form.companyName.value = state.currentUser.companyName || '';
+    form.phone.value = state.currentUser.phone || '';
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const payload = {
+            username: form.username.value.trim(),
+            password: null,
+            email: form.email.value.trim(),
+            deliveryAddress: form.deliveryAddress.value.trim(),
+            companyName: form.companyName.value.trim(),
+            phone: form.phone.value.trim(),
+            role: null,
+            priceLevelId: null
+        };
+
+        const updated = await apiPut('/users/me', payload);
+        state.currentUser = updated;
+        setCredentials(updated.username, currentPasswordFromStorage());
+        showMessage('profileMessage', 'Данные сохранены.');
+    });
+
+    passwordForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        const oldPassword = passwordForm.oldPassword.value;
+        const newPassword = passwordForm.newPassword.value;
+
+        await apiPost('/users/me/change-password', { oldPassword, newPassword });
+        setCredentials(state.currentUser.username, newPassword);
+        passwordForm.reset();
+        showMessage('passwordMessage', 'Пароль изменен.');
+    });
+}
+
 async function initUsers() {
     await initShell(true);
     state.size = 20;
-    document.getElementById('createUser').addEventListener('click', () => editUser());
-    document.getElementById('userForm').addEventListener('submit', saveUser);
+    document.getElementById('createUser')?.addEventListener('click', () => editUser());
+    document.getElementById('managePriceLevels')?.addEventListener('click', () => openPriceLevelModal());
+    document.getElementById('userForm')?.addEventListener('submit', saveUser);
     await loadUsers();
 }
 
@@ -830,7 +981,20 @@ async function editUser(id) {
     form.reset();
     document.getElementById('userId').value = '';
     form.password.required = !id;
+    const pwField = document.getElementById('passwordField');
+    if (pwField) pwField.style.display = id ? 'none' : '';
     document.getElementById('userModalTitle').textContent = id ? 'Редактирование пользователя' : 'Новый пользователь';
+
+    // Загружаем список уровней цен
+    const priceLevels = await apiGet('/users/price-levels/all');
+    const priceLevelSelect = form.priceLevelId;
+    priceLevelSelect.innerHTML = '<option value="">-- Выберите уровень цены --</option>';
+    priceLevels.forEach(level => {
+        const option = document.createElement('option');
+        option.value = level.id;
+        option.textContent = `${level.name} (x${level.ratio})`;
+        priceLevelSelect.appendChild(option);
+    });
 
     if (id) {
         const user = await apiGet(`/users/${id}`);
@@ -845,6 +1009,75 @@ async function editUser(id) {
     }
 
     openModal('userModal');
+}
+
+// Price level management
+async function openPriceLevelModal() {
+    // create modal if not exists
+    if (!document.getElementById('priceLevelModal')) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'priceLevelModal';
+        modal.innerHTML = `
+            <div class="modal__content">
+                <div class="modal__head"><h2>Уровни цен</h2><button class="btn secondary" data-close-modal="priceLevelModal">Закрыть</button></div>
+                <div style="padding:16px">
+                    <div id="priceLevelList"></div>
+                    <hr>
+                    <form id="priceLevelForm">
+                        <input id="priceLevelId" type="hidden">
+                        <div class="field"><label>Название</label><input name="name" required></div>
+                        <div class="field"><label>Коэффициент</label><input name="ratio" type="number" step="0.01" min="0" required></div>
+                        <div class="actions"><button class="btn" type="submit">Сохранить</button></div>
+                    </form>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+        document.getElementById('priceLevelForm').addEventListener('submit', savePriceLevel);
+    }
+
+    document.getElementById('priceLevelId').value = '';
+    document.getElementById('priceLevelForm').reset();
+    openModal('priceLevelModal');
+    await loadPriceLevels();
+}
+
+async function loadPriceLevels() {
+    const listEl = document.getElementById('priceLevelList');
+    listEl.innerHTML = 'Загрузка...';
+    const levels = await apiGet('/users/price-levels/all');
+    if (!levels || !levels.length) {
+        listEl.innerHTML = '<div>Уровней цен нет.</div>';
+        return;
+    }
+    listEl.innerHTML = levels.map(l => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0"><div>${esc(l.name)} (x${l.ratio})</div><div><button class="btn secondary" data-edit-pricelevel="${l.id}">Изменить</button> <button class="btn danger" data-delete-pricelevel="${l.id}">Удалить</button></div></div>`).join('');
+    listEl.querySelectorAll('[data-edit-pricelevel]').forEach(btn => btn.addEventListener('click', async () => {
+        const id = btn.dataset.editPricelevel;
+        const pl = levels.find(x => x.id == id);
+        document.getElementById('priceLevelId').value = pl.id;
+        const form = document.getElementById('priceLevelForm');
+        form.name.value = pl.name;
+        form.ratio.value = pl.ratio;
+    }));
+    listEl.querySelectorAll('[data-delete-pricelevel]').forEach(btn => btn.addEventListener('click', async () => {
+        if (!confirm('Удалить уровень цены?')) return;
+        await apiDelete(`/users/price-levels/${btn.dataset.deletePricelevel}`);
+        await loadPriceLevels();
+    }));
+}
+
+async function savePriceLevel(event) {
+    event.preventDefault();
+    const form = event.target;
+    const id = document.getElementById('priceLevelId').value;
+    const payload = {
+        name: form.name.value.trim(),
+        ratio: Number(form.ratio.value)
+    };
+    if (id) await apiPut(`/users/price-levels/${id}`, payload);
+    else await apiPost('/users/price-levels', payload);
+    form.reset();
+    await loadPriceLevels();
 }
 
 async function saveUser(event) {
@@ -897,6 +1130,7 @@ window.addEventListener('load', () => {
         products: initProductsAdmin,
         cart: initCart,
         orders: initOrders,
+        profile: initProfile,
         supplies: initSupplies,
         warehouses: initWarehouses,
         users: initUsers
