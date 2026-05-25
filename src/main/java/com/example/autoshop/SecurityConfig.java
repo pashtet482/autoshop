@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,6 +29,8 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
+
                         // Публичные страницы
                         .requestMatchers(
                                 "/",
@@ -45,15 +46,6 @@ public class SecurityConfig {
                                 "/users.html",
                                 "/cart.html",
                                 "/profile.html"
-                        ).permitAll()
-
-                        // Статика
-                        .requestMatchers(
-                                "/css/**",
-                                "/js/**",
-                                "/images/**",
-                                "/uploads/**",
-                                "/favicon.ico"
                         ).permitAll()
 
                         // Swagger
@@ -152,7 +144,20 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                .httpBasic(Customizer.withDefaults());
+                .httpBasic(basic -> basic
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            // Проверяем, если это внутренний редирект ошибки, отдаем статус ошибки
+                            if (request.getAttribute("jakarta.servlet.error.status_code") != null) {
+                                int statusCode = (int) request.getAttribute("jakarta.servlet.error.status_code");
+                                response.setStatus(statusCode);
+                            } else {
+                                response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                            }
+                            // Пишем текстовый ответ вместо отправки заголовка WWW-Authenticate
+                            response.getWriter().write("Unauthorized: " + authException.getMessage());
+                        })
+                );
+
 
         return http.build();
     }
@@ -164,4 +169,17 @@ public class SecurityConfig {
 
         return config.getAuthenticationManager();
     }
+
+    @Bean
+    public org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(
+                "/error",
+                "/favicon.ico",
+                "/**/*.map",
+                "/css/**",
+                "/js/**",
+                "/images/**"
+        );
+    }
+
 }

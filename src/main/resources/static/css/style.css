@@ -634,13 +634,12 @@ td .actions {
     align-items: center;
 }
 
-td.actions .btn,
-td .actions .btn {
-    width: 104px;
+.actions .btn {
+    min-width: 104px;
     height: 36px;
-    min-height: 36px;
     padding: 8px 10px;
     font-size: 14px;
+    white-space: nowrap;
 }
 
 .pagination {
