@@ -29,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -137,7 +138,7 @@ public class OrderService {
         BigDecimal ratio = user.getPriceLevel().getRatio();
         BigDecimal discountedTotal = totalPrice.multiply(ratio);
         BigDecimal taxAmount = discountedTotal.multiply(taxPercent)
-                .divide(BigDecimal.valueOf(100));
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
         savedOrder.setTotalPrice(discountedTotal.add(taxAmount));
 
