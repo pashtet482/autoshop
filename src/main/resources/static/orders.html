@@ -12,6 +12,7 @@
             <a class="logo" href="index.html"><span class="logo__mark">A</span><span>AutoShop</span></a>
             <nav class="nav">
                 <a href="index.html">Каталог</a><a href="orders.html">Заказы</a><a href="profile.html">Профиль</a><a href="products.html" data-admin-only hidden>Товары</a><a href="supplies.html" data-admin-only hidden>Поставки</a><a href="warehouses.html" data-admin-only hidden>Склады</a><a href="users.html" data-admin-only hidden>Пользователи</a>
+                <a href="categories.html" data-admin-only hidden>Категории</a><a href="brands.html" data-admin-only hidden>Бренды</a><a href="suppliers.html" data-admin-only hidden>Поставщики</a>
             </nav>
             <div class="header__actions"><a class="btn secondary cart-button" href="cart.html">Корзина <span data-cart-count hidden>0</span></a><button class="btn ghost" onclick="logout()">Выход</button></div>
         </div>
@@ -20,8 +21,12 @@
         <div class="page-title">
             <div><h1>Заказы</h1><p id="ordersPageHint">История оформленных заказов.</p></div>
             <div class="actions">
+                <div class="inline-fields orders-filters">
+                    <div class="field"><label for="ordersDateFrom">С даты</label><input id="ordersDateFrom" type="date"></div>
+                    <div class="field"><label for="ordersDateTo">По дату</label><input id="ordersDateTo" type="date"></div>
+                </div>
                 <button class="btn secondary" id="toggleAllOrders" data-admin-only hidden>Заказы других пользователей</button>
-                <a class="btn" href="index.html">В каталог</a>
+                <a class="btn orders-catalog-link" href="index.html">В каталог</a>
             </div>
         </div>
         <div class="table-wrap">

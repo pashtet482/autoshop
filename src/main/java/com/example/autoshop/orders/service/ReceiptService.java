@@ -6,6 +6,7 @@ import com.example.autoshop.orders.repository.OrderRepository;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,8 @@ import java.time.format.DateTimeFormatter;
 @Service
 @RequiredArgsConstructor
 public class ReceiptService {
+    @Value("${app.tax.percent:22}")
+    private BigDecimal taxPercent;
 
     private final OrderRepository orderRepository;
 
@@ -76,7 +79,7 @@ public class ReceiptService {
                 """.formatted(
                     item.getProduct().getName(),
                     item.getQuantity(),
-                    item.getPriceAtPurchase()
+                    formatDecimal(item.getPriceAtPurchase())
             ));
         }
 
@@ -94,15 +97,16 @@ public class ReceiptService {
                 )
                 .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
 
-        BigDecimal finalTotal = order.getTotalPrice();
-
-        BigDecimal discountAmount =
-                originalTotal.subtract(finalTotal);
-
         BigDecimal ratio =
                 order.getUser()
                         .getPriceLevel()
                         .getRatio();
+
+        BigDecimal discountedSubtotal = originalTotal.multiply(ratio);
+        BigDecimal taxAmount = discountedSubtotal.multiply(taxPercent)
+                .divide(BigDecimal.valueOf(100));
+        BigDecimal finalTotal = order.getTotalPrice();
+        BigDecimal discountAmount = originalTotal.subtract(discountedSubtotal);
 
         BigDecimal discountPercent =
                 java.math.BigDecimal.ONE
@@ -179,6 +183,11 @@ public class ReceiptService {
                     %s
                 </p>
 
+                <p>
+                    <strong>Адрес доставки:</strong>
+                    %s
+                </p>
+
                 <table>
 
                     <thead>
@@ -203,7 +212,17 @@ public class ReceiptService {
                         </p>
             
                         <p>
+                            Тип скидки:
+                            Скидка по уровню цены
+                        </p>
+
+                        <p>
                             Скидка:
+                            %s%% (%s ₽)
+                        </p>
+
+                        <p>
+                            Налог:
                             %s%% (%s ₽)
                         </p>
             
@@ -222,12 +241,19 @@ public class ReceiptService {
                 order.getUser().getUsername(),
                 order.getDateOfPurchase().format(formatter),
                 order.getDateOfDelivery().format(formatter),
+                order.getDeliveryAddress(),
                 itemsHtml.toString(),
-                originalTotal,
-                discountPercent,
-                discountAmount,
-                finalTotal
+                formatDecimal(originalTotal),
+                formatDecimal(discountPercent),
+                formatDecimal(discountAmount),
+                formatDecimal(taxPercent),
+                formatDecimal(taxAmount),
+                formatDecimal(finalTotal)
         );
+    }
+
+    private @NonNull String formatDecimal(@NonNull BigDecimal value) {
+        return value.stripTrailingZeros().toPlainString();
     }
 
     private @NonNull Order findAccessibleOrder(Long orderId,
@@ -235,11 +261,11 @@ public class ReceiptService {
                                                boolean adminMode) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() ->
-                        new RuntimeException("Order not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден")
                 );
 
         if (!adminMode && !order.getUser().getUsername().equals(currentUsername)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден");
         }
 
         return order;

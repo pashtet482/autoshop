@@ -38,6 +38,9 @@ public class SecurityConfig {
                                 "/products.html",
                                 "/orders.html",
                                 "/supplies.html",
+                                "/brands.html",
+                                "/categories.html",
+                                "/suppliers.html",
                                 "/warehouses.html",
                                 "/users.html",
                                 "/cart.html",
@@ -71,6 +74,15 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/api/products/search"
                         ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/users/register"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                "/api/categories/**",
+                                "/api/brands/**"
+                        ).hasRole("ADMIN")
 
                         // Пользователь
                         .requestMatchers(

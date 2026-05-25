@@ -16,8 +16,9 @@ import com.example.autoshop.products.repository.ProductRepository;
 import com.example.autoshop.products.repository.ProductStockRepository;
 import com.example.autoshop.users.model.User;
 import com.example.autoshop.users.repository.UserRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,8 +34,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class OrderService {
+    @Value("${app.tax.percent:22}")
+    private BigDecimal taxPercent;
+
     private final OrderMapper orderMapper;
 
     private final ProductInOrderMapper productInOrderMapper;
@@ -131,10 +135,11 @@ public class OrderService {
         }
 
         BigDecimal ratio = user.getPriceLevel().getRatio();
+        BigDecimal discountedTotal = totalPrice.multiply(ratio);
+        BigDecimal taxAmount = discountedTotal.multiply(taxPercent)
+                .divide(BigDecimal.valueOf(100));
 
-        totalPrice = totalPrice.multiply(ratio);
-
-        savedOrder.setTotalPrice(totalPrice);
+        savedOrder.setTotalPrice(discountedTotal.add(taxAmount));
 
         productInOrderRepository.saveAll(items);
 
@@ -142,7 +147,7 @@ public class OrderService {
 
         orderRepository.save(savedOrder);
 
-        return orderMapper.toDto(savedOrder);
+        return toOrderDto(savedOrder);
     }
 
     @Transactional(readOnly = true)
@@ -150,7 +155,7 @@ public class OrderService {
                                  String currentUsername,
                                  boolean adminMode) {
 
-        return orderMapper.toDto(findAccessibleOrder(id, currentUsername, adminMode));
+        return toOrderDto(findAccessibleOrder(id, currentUsername, adminMode));
     }
 
     @Transactional(readOnly = true)
@@ -170,7 +175,7 @@ public class OrderService {
         return (adminMode
                 ? orderRepository.findAll(pageable)
                 : orderRepository.findAllByUser_Username(currentUsername, pageable))
-                .map(orderMapper::toDto);
+                .map(this::toOrderDto);
     }
 
     public OrderDTO updateStatus(
@@ -186,7 +191,7 @@ public class OrderService {
         order.setOrderStatus(status);
         order.setUpdatedAt(OffsetDateTime.now());
 
-        return orderMapper.toDto(
+        return toOrderDto(
                 orderRepository.save(order)
         );
     }
@@ -236,5 +241,41 @@ public class OrderService {
         }
 
         return order;
+    }
+
+    private @NonNull OrderDTO toOrderDto(@NonNull Order order) {
+        OrderDTO base = orderMapper.toDto(order);
+
+        BigDecimal subtotal = order.getItems()
+                .stream()
+                .map(item -> item.getPriceAtPurchase().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal ratio = order.getUser().getPriceLevel().getRatio();
+        BigDecimal discountedSubtotal = subtotal.multiply(ratio);
+        BigDecimal discountAmount = subtotal.subtract(discountedSubtotal);
+        BigDecimal discountPercent = BigDecimal.ONE
+                .subtract(ratio)
+                .multiply(BigDecimal.valueOf(100));
+        BigDecimal calculatedTaxAmount = discountedSubtotal.multiply(taxPercent)
+                .divide(BigDecimal.valueOf(100));
+
+        return new OrderDTO(
+                base.id(),
+                base.userId(),
+                base.orderStatus(),
+                base.updatedAt(),
+                base.dateOfPurchase(),
+                base.dateOfDelivery(),
+                base.deliveryAddress(),
+                subtotal,
+                "Скидка по уровню цены",
+                discountPercent,
+                discountAmount,
+                taxPercent,
+                calculatedTaxAmount,
+                base.totalPrice(),
+                base.items()
+        );
     }
 }

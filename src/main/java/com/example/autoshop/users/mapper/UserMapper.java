@@ -22,6 +22,8 @@ public interface UserMapper {
     User toEntity(InputUserDTO dto);
 
     @Mapping(source = "priceLevel.id", target = "priceLevelId")
+    @Mapping(source = "priceLevel.name", target = "priceLevelName")
+    @Mapping(source = "priceLevel.ratio", target = "priceLevelRatio")
     UserDTO toDto(User user);
 
     @Mapping(target = "id", ignore = true)

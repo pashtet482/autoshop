@@ -25,5 +25,11 @@ public interface OrderMapper {
     Order toEntity(InputOrderDTO dto);
 
     @Mapping(source = "user.id", target = "userId")
+    @Mapping(target = "subtotal", ignore = true)
+    @Mapping(target = "discountType", ignore = true)
+    @Mapping(target = "discountPercent", ignore = true)
+    @Mapping(target = "discountAmount", ignore = true)
+    @Mapping(target = "taxPercent", ignore = true)
+    @Mapping(target = "taxAmount", ignore = true)
     OrderDTO toDto(Order order);
 }

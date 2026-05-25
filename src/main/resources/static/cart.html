@@ -12,6 +12,7 @@
             <a class="logo" href="index.html"><span class="logo__mark">A</span><span>AutoShop</span></a>
             <nav class="nav">
                 <a href="index.html">Каталог</a><a href="orders.html">Заказы</a><a href="profile.html">Профиль</a><a href="products.html" data-admin-only hidden>Товары</a><a href="supplies.html" data-admin-only hidden>Поставки</a><a href="warehouses.html" data-admin-only hidden>Склады</a><a href="users.html" data-admin-only hidden>Пользователи</a>
+                <a href="categories.html" data-admin-only hidden>Категории</a><a href="brands.html" data-admin-only hidden>Бренды</a><a href="suppliers.html" data-admin-only hidden>Поставщики</a>
             </nav>
             <div class="header__actions"><a class="btn secondary cart-button" href="cart.html">Корзина <span data-cart-count hidden>0</span></a><button class="btn ghost" onclick="logout()">Выход</button></div>
         </div>
@@ -26,7 +27,15 @@
         <div class="modal__content">
             <div class="modal__head"><h2>Оформление заказа</h2><button class="btn secondary" data-close-modal="checkoutModal">Закрыть</button></div>
             <form id="checkoutForm">
-                <div class="field"><label>Адрес доставки</label><textarea id="deliveryAddress" required></textarea></div>
+                <div class="address-fields" data-address-fields>
+                    <div class="inline-fields">
+                        <div class="field"><label>Город / населенный пункт</label><input id="deliveryCity" name="deliveryCity" required></div>
+                        <div class="field"><label>Почтовый индекс</label><input id="deliveryPostalCode" name="deliveryPostalCode" inputmode="numeric" pattern="[0-9]{6}" required></div>
+                    </div>
+                    <div class="field"><label>Улица, дом, корпус/строение</label><input id="deliveryStreet" name="deliveryStreet" required></div>
+                    <div class="field"><label>Квартира / офис</label><input id="deliveryApartment" name="deliveryApartment"></div>
+                </div>
+                <div class="checkout-summary" id="checkoutSummary"></div>
                 <button class="btn" type="submit">Подтвердить заказ</button>
             </form>
         </div>

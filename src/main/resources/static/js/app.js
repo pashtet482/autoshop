@@ -1,7 +1,7 @@
 const state = {
     page: 0,
     totalPages: 1,
-    size: 12,
+    size: 20,
     currentUser: null,
     categories: [],
     brands: [],
@@ -22,6 +22,8 @@ const orderStatuses = {
     CANCELED: 'Отменен'
 };
 const orderStatusOptions = ['CREATED', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+const TAX_PERCENT = 22;
+const PRODUCT_IMAGES_KEY = 'autoshop.productImages';
 let showAllOrders = false;
 
 function esc(value) {
@@ -38,8 +40,26 @@ function money(value) {
     return rub.format(Number(value || 0));
 }
 
+function percent(value) {
+    return `${Number(value || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%`;
+}
+
+function getProductImages() {
+    return JSON.parse(localStorage.getItem(PRODUCT_IMAGES_KEY) || '{}');
+}
+
 function getProductImage(product) {
     return product.imageUrl || '';
+}
+
+function saveProductImage(productId, imageUrl) {
+    const images = getProductImages();
+    if (imageUrl) {
+        images[productId] = imageUrl;
+    } else {
+        delete images[productId];
+    }
+    localStorage.setItem(PRODUCT_IMAGES_KEY, JSON.stringify(images));
 }
 
 function productMediaHtml(product, extraStyle = '') {
@@ -272,29 +292,106 @@ function fillSelect(id, items, label, selected) {
     }).join('');
 }
 
-function addProductAttributeRow(attribute = {}) {
-    const container = document.getElementById('productAttributes');
-    if (!container) return;
-
-    const row = document.createElement('div');
-    row.className = 'attribute-editor';
-    row.innerHTML = `
-        <input name="attributeName" placeholder="Название" value="${esc(attribute.name || '')}">
-        <input name="attributeValue" placeholder="Значение" value="${esc(attribute.value || '')}">
-        <button class="btn danger" type="button">Удалить</button>
-    `;
-
-    row.querySelector('button').addEventListener('click', () => row.remove());
-    container.appendChild(row);
+function getPriceRatio() {
+    return Number(state.currentUser?.priceLevelRatio || 1);
 }
 
-function collectProductAttributes() {
-    return [...document.querySelectorAll('#productAttributes .attribute-editor')]
-        .map(row => ({
-            name: row.querySelector('[name="attributeName"]')?.value.trim() || '',
-            value: row.querySelector('[name="attributeValue"]')?.value.trim() || ''
-        }))
-        .filter(attribute => attribute.name);
+function getDiscountPercent(ratio = getPriceRatio()) {
+    return Math.max(0, (1 - ratio) * 100);
+}
+
+function getCartTotals() {
+    const subtotal = getCartTotal();
+    const ratio = getPriceRatio();
+    const discountedSubtotal = subtotal * ratio;
+    const discountAmount = subtotal - discountedSubtotal;
+    const taxAmount = discountedSubtotal * TAX_PERCENT / 100;
+
+    return {
+        subtotal,
+        ratio,
+        discountAmount,
+        discountPercent: getDiscountPercent(ratio),
+        taxAmount,
+        total: discountedSubtotal + taxAmount
+    };
+}
+
+function renderCheckoutSummary() {
+    const box = document.getElementById('checkoutSummary');
+    if (!box) return;
+
+    const totals = getCartTotals();
+    box.innerHTML = `
+        <div class="checkout-summary__row"><span>Сумма товаров</span><strong>${money(totals.subtotal)}</strong></div>
+        <div class="checkout-summary__row"><span>Скидка по уровню цены (${percent(totals.discountPercent)})</span><strong>-${money(totals.discountAmount)}</strong></div>
+        <div class="checkout-summary__row"><span>Цена без налога</span><strong>${money(totals.subtotal - totals.discountAmount)}</strong></div>
+        <div class="checkout-summary__row"><span>Налог (${TAX_PERCENT}%)</span><strong>${money(totals.taxAmount)}</strong></div>
+        <div class="checkout-summary__row"><span>Итого к оплате</span><strong>${money(totals.total)}</strong></div>
+    `;
+}
+
+function splitDeliveryAddress(address = '') {
+    const value = String(address || '');
+    const labeledParts = Object.fromEntries(
+        value
+            .split(';')
+            .map(part => part.trim())
+            .filter(Boolean)
+            .map(part => {
+                const separatorIndex = part.indexOf(':');
+                if (separatorIndex < 0) return ['', ''];
+                return [
+                    part.slice(0, separatorIndex).trim().toLowerCase(),
+                    part.slice(separatorIndex + 1).trim()
+                ];
+            })
+            .filter(([key]) => key)
+    );
+
+    if (Object.keys(labeledParts).length) {
+        return {
+            city: labeledParts['город'] || '',
+            street: labeledParts['улица/дом'] || '',
+            apartment: labeledParts['кв./офис'] || '',
+            postalCode: labeledParts['индекс'] || ''
+        };
+    }
+
+    const parts = value.split(',').map(part => part.trim());
+    return {
+        postalCode: parts.find(part => /^\d{6}$/.test(part)) || '',
+        city: parts.find(part => part && !/^\d{6}$/.test(part)) || '',
+        street: parts.length > 2 ? parts.slice(2, -1).join(', ') : '',
+        apartment: parts.length > 3 ? parts[parts.length - 1] : ''
+    };
+}
+
+function fillDeliveryAddressFields(address) {
+    const parsed = splitDeliveryAddress(address);
+    const city = document.getElementById('deliveryCity');
+    const postalCode = document.getElementById('deliveryPostalCode');
+    const street = document.getElementById('deliveryStreet');
+    const apartment = document.getElementById('deliveryApartment');
+
+    if (city) city.value = parsed.city;
+    if (postalCode) postalCode.value = parsed.postalCode;
+    if (street) street.value = parsed.street;
+    if (apartment) apartment.value = parsed.apartment;
+}
+
+function collectDeliveryAddress() {
+    const city = document.getElementById('deliveryCity')?.value.trim();
+    const postalCode = document.getElementById('deliveryPostalCode')?.value.trim();
+    const street = document.getElementById('deliveryStreet')?.value.trim();
+    const apartment = document.getElementById('deliveryApartment')?.value.trim();
+
+    return [
+        city ? `Город: ${city}` : '',
+        street ? `Улица/дом: ${street}` : '',
+        apartment ? `Кв./офис: ${apartment}` : '',
+        postalCode ? `Индекс: ${postalCode}` : ''
+    ].filter(Boolean).join('; ');
 }
 
 async function initLogin() {
@@ -303,7 +400,7 @@ async function initLogin() {
         return;
     }
 
-    document.getElementById('loginForm')?.addEventListener('submit', async event => {
+    document.getElementById('loginForm').addEventListener('submit', async event => {
         event.preventDefault();
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
@@ -328,17 +425,17 @@ async function initCatalog() {
     fillSelect('filterCategory', state.categories, 'Все категории');
     fillSelect('filterBrand', state.brands, 'Все бренды');
 
-    document.getElementById('filterForm')?.addEventListener('submit', event => {
+    document.getElementById('filterForm').addEventListener('submit', event => {
         event.preventDefault();
         state.page = 0;
         loadCatalog();
     });
-    document.getElementById('resetFilters')?.addEventListener('click', () => {
-        document.getElementById('filterForm')?.reset();
+    document.getElementById('resetFilters').addEventListener('click', () => {
+        document.getElementById('filterForm').reset();
         state.page = 0;
         loadCatalog();
     });
-    document.getElementById('catalogSearch')?.addEventListener('input', debounce(() => {
+    document.getElementById('catalogSearch').addEventListener('input', debounce(() => {
         state.page = 0;
         loadCatalog();
     }));
@@ -393,15 +490,19 @@ function displayCatalogProducts(products) {
         <article class="product-card">
             ${productMediaHtml(product)}
             <div class="product-card__body">
-                <span class="badge">${esc(product.category?.name || 'Запчасть')}</span>
-                <h3>${esc(product.name)}</h3>
-                <div class="meta">${esc(product.brand?.name || '-')} · SKU ${esc(product.sku || '-')} · OEM ${esc(product.oemNumber || '-')}</div>
-                ${renderStockBadge(product)}
-                <div class="attribute-list">${renderAttributes(product.attributes, 3)}</div>
-                <div class="price">${money(product.sellingPrice)}</div>
-                <div class="actions">
-                    ${renderCartControl(product)}
-                    <button class="btn secondary" data-view="${product.id}">Подробнее</button>
+                <div class="product-card__main">
+                    <span class="badge">${esc(product.category?.name || 'Запчасть')}</span>
+                    <h3 title="${esc(product.name)}">${esc(product.name)}</h3>
+                    <div class="meta product-card__meta">${esc(product.brand?.name || '-')} · SKU ${esc(product.sku || '-')} · OEM ${esc(product.oemNumber || '-')}</div>
+                    ${renderStockBadge(product)}
+                    <div class="attribute-list">${renderAttributes(product.attributes, 3)}</div>
+                </div>
+                <div class="product-card__footer">
+                    <div class="price">${money(product.sellingPrice)}</div>
+                    <div class="actions product-card__actions">
+                        ${renderCartControl(product)}
+                        <button class="btn secondary" data-view="${product.id}">Подробнее</button>
+                    </div>
                 </div>
             </div>
         </article>
@@ -439,20 +540,49 @@ async function showProduct(id) {
     const attributesHtml = renderAttributes(product.attributes);
     const totalStock = getTotalStock(product);
     document.getElementById('productModalBody').innerHTML = `
-        ${productMediaHtml(product, 'height:180px;border-radius:8px;margin-bottom:16px')}
-        <h2>${esc(product.name)}</h2>
-        <p class="price">${money(product.sellingPrice)}</p>
-        ${renderStockBadge(product)}
-        <p>${esc(product.description || 'Описание не заполнено.')}</p>
-        <p class="meta">Бренд: ${esc(product.brand?.name || '-')} · Категория: ${esc(product.category?.name || '-')}</p>
-        <p class="meta">SKU: ${esc(product.sku || '-')} · OEM: ${esc(product.oemNumber || '-')}</p>
-        <h3>Характеристики</h3>
-        <div class="attribute-list detail">${attributesHtml || '<span class="meta">Атрибуты не заполнены.</span>'}</div>
-        <h3>Наличие и доставка</h3>
-        ${renderDeliveryOptions(product.stocks)}
-        <div class="actions"><button class="btn" id="modalAddToCart" ${totalStock <= 0 ? 'disabled' : ''}>Добавить в корзину</button></div>
+        <div class="product-modal">
+            <div class="product-modal__media">
+                ${productMediaHtml(product)}
+            </div>
+            <div class="product-modal__info">
+                <div class="product-modal__header">
+                    <div class="product-modal__title">
+                        <span class="badge">${esc(product.category?.name || 'Запчасть')}</span>
+                        <h2>${esc(product.name)}</h2>
+                    </div>
+                    <div class="product-modal__buy">
+                        <p class="price">${money(product.sellingPrice)}</p>
+                        ${renderStockBadge(product)}
+                    </div>
+                </div>
+
+                <div class="product-modal__section">
+                    <p class="product-modal__description">${esc(product.description || 'Описание не заполнено.')}</p>
+                </div>
+
+                <div class="product-modal__section product-modal__meta">
+                    <div class="product-modal__meta-row"><span class="product-modal__meta-label">Бренд</span><span class="product-modal__meta-value">${esc(product.brand?.name || '-')}</span></div>
+                    <div class="product-modal__meta-row"><span class="product-modal__meta-label">SKU</span><span class="product-modal__meta-value">${esc(product.sku || '-')}</span></div>
+                    <div class="product-modal__meta-row"><span class="product-modal__meta-label">OEM</span><span class="product-modal__meta-value">${esc(product.oemNumber || '-')}</span></div>
+                </div>
+
+                <div class="product-modal__section">
+                    <h3>Характеристики</h3>
+                    <div class="attribute-list detail">${attributesHtml || '<span class="meta">Атрибуты не заполнены.</span>'}</div>
+                </div>
+
+                <div class="product-modal__section">
+                    <h3>Наличие и доставка</h3>
+                    ${renderDeliveryOptions(product.stocks)}
+                </div>
+
+                <div class="actions product-modal__actions">
+                    <button class="btn" id="modalAddToCart" ${totalStock <= 0 ? 'disabled' : ''}>Добавить в корзину</button>
+                </div>
+            </div>
+        </div>
     `;
-    document.getElementById('modalAddToCart')?.addEventListener('click', () => {
+    document.getElementById('modalAddToCart').addEventListener('click', () => {
         addToCart(product);
         closeModal('productModal');
     });
@@ -466,9 +596,8 @@ async function initProductsAdmin() {
     fillSelect('productBrandId', state.brands, 'Бренд');
     await loadProductsAdmin();
 
-    document.getElementById('productForm')?.addEventListener('submit', saveProduct);
-    document.getElementById('createProduct')?.addEventListener('click', () => editProduct());
-    document.getElementById('addProductAttribute')?.addEventListener('click', () => addProductAttributeRow());
+    document.getElementById('productForm').addEventListener('submit', saveProduct);
+    document.getElementById('createProduct').addEventListener('click', () => editProduct());
 }
 
 async function loadProductsAdmin() {
@@ -501,10 +630,6 @@ async function editProduct(id) {
     form.reset();
     document.getElementById('productId').value = '';
     document.getElementById('productModalTitle').textContent = id ? 'Редактирование товара' : 'Новый товар';
-    const attributesContainer = document.getElementById('productAttributes');
-    if (attributesContainer) {
-        attributesContainer.innerHTML = '';
-    }
 
     if (id) {
         const product = await apiGet(`/products/${id}`);
@@ -516,30 +641,10 @@ async function editProduct(id) {
         form.sku.value = product.sku || '';
         form.oemNumber.value = product.oemNumber || '';
         const imageUrl = getProductImage(product);
-        if (form.currentImageUrl) form.currentImageUrl.value = imageUrl;
         const preview = document.getElementById('productImagePreview');
         if (preview) preview.innerHTML = imageUrl ? `<img src="${esc(imageUrl)}" style="max-width:140px;">` : '';
         form.description.value = product.description || '';
-        (product.attributes || []).forEach(attribute => addProductAttributeRow(attribute));
     }
-
-    if (attributesContainer && !attributesContainer.children.length) {
-        addProductAttributeRow();
-    }
-
-    form.imageFile.value = '';
-    form.imageFile.onchange = () => {
-        const preview = document.getElementById('productImagePreview');
-        const file = form.imageFile.files && form.imageFile.files[0];
-        if (!preview) return;
-        if (!file) {
-            const current = form.currentImageUrl ? form.currentImageUrl.value : '';
-            preview.innerHTML = current ? `<img src="${esc(current)}" style="max-width:140px;">` : '';
-            return;
-        }
-        const url = URL.createObjectURL(file);
-        preview.innerHTML = `<img src="${url}" style="max-width:140px;">`;
-    };
 
     openModal('productEditModal');
 }
@@ -548,7 +653,6 @@ async function saveProduct(event) {
     event.preventDefault();
     const form = event.target;
     const id = document.getElementById('productId').value;
-    const file = form.imageFile.files && form.imageFile.files[0];
     const payload = {
         name: form.name.value.trim(),
         sellingPrice: Number(form.sellingPrice.value),
@@ -556,32 +660,23 @@ async function saveProduct(event) {
         brandId: Number(form.brandId.value),
         sku: form.sku.value.trim(),
         oemNumber: form.oemNumber.value.trim(),
-        imageUrl: file ? null : (form.currentImageUrl ? form.currentImageUrl.value.trim() : ''),
         description: form.description.value.trim(),
-        attributes: collectProductAttributes()
+        attributes: []
     };
 
-    const saved = await (id ? apiPut(`/products/${id}`, payload) : apiPost('/products', payload));
-
-    if (file) {
-        const fd = new FormData();
-        fd.append('file', file);
-        const response = await fetch(`/api/products/${saved.id}/image`, {
-            method: 'POST',
-            headers: {
-                Authorization: getAuthHeaders(false).Authorization
-            },
-            body: fd
-        });
-
-        if (!response.ok) {
-            throw new Error('Не удалось загрузить изображение');
+    const saved = id ? await apiPut(`/products/${id}`, payload) : await apiPost('/products', payload);
+    // if a file was selected, upload it
+    try {
+        const fileInput = form.imageFile;
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            const fd = new FormData();
+            fd.append('file', fileInput.files[0]);
+            const resp = await fetch(`/api/products/${saved.id}/image`, { method: 'POST', body: fd });
+            if (!resp.ok) throw new Error('Image upload failed');
         }
-
-        const updated = await response.json();
-        if (form.currentImageUrl) {
-            form.currentImageUrl.value = updated.imageUrl || '';
-        }
+    } catch (e) {
+        console.error(e);
+        alert('Не удалось загрузить изображение');
     }
 
     closeModal('productEditModal');
@@ -598,11 +693,10 @@ async function initCart() {
     await initShell();
     await refreshCartAvailability();
     renderCart();
-    document.getElementById('checkoutForm')?.addEventListener('submit', submitOrder);
-    document.getElementById('openCheckout')?.addEventListener('click', () => {
-        if (document.getElementById('deliveryAddress')) {
-            document.getElementById('deliveryAddress').value = state.currentUser?.deliveryAddress || '';
-        }
+    document.getElementById('checkoutForm').addEventListener('submit', submitOrder);
+    document.getElementById('openCheckout').addEventListener('click', () => {
+        fillDeliveryAddressFields(state.currentUser?.deliveryAddress || '');
+        renderCheckoutSummary();
         openModal('checkoutModal');
     });
 }
@@ -647,7 +741,7 @@ function renderCart() {
         </div>
     `).join('') : '<div class="empty">Корзина пустая. Добавьте товары из каталога.</div>';
 
-    total.textContent = money(getCartTotal());
+    total.textContent = money(getCartTotals().total);
     checkout.disabled = cart.length === 0;
 
     box.querySelectorAll('[data-qty]').forEach(input => input.addEventListener('input', () => {
@@ -660,6 +754,7 @@ function renderCart() {
         }
         updateCartItem(input.dataset.qty, input.value);
         renderCart();
+        renderCheckoutSummary();
     }));
     box.querySelectorAll('[data-qty]').forEach(input => input.addEventListener('change', () => {
         const max = Number(input.max || input.value);
@@ -671,10 +766,12 @@ function renderCart() {
         }
         updateCartItem(input.dataset.qty, input.value);
         renderCart();
+        renderCheckoutSummary();
     }));
     box.querySelectorAll('[data-remove]').forEach(btn => btn.addEventListener('click', () => {
         removeFromCart(btn.dataset.remove);
         renderCart();
+        renderCheckoutSummary();
     }));
 }
 
@@ -691,7 +788,7 @@ async function submitOrder(event) {
 
     const payload = {
         userId: state.currentUser.id,
-        deliveryAddress: document.getElementById('deliveryAddress').value.trim(),
+        deliveryAddress: collectDeliveryAddress(),
         items: cart.map(item => ({ productId: item.id, quantity: item.quantity }))
     };
 
@@ -711,6 +808,14 @@ async function initOrders() {
             loadOrders();
         });
     }
+    document.getElementById('ordersDateFrom')?.addEventListener('change', () => {
+        state.page = 0;
+        loadOrders();
+    });
+    document.getElementById('ordersDateTo')?.addEventListener('change', () => {
+        state.page = 0;
+        loadOrders();
+    });
     await loadOrders();
 }
 
@@ -718,7 +823,18 @@ async function loadOrders() {
     const page = await apiGet(`/orders?${pageParam()}`);
     if (!applyPageInfo(page, loadOrders)) return;
     const adminViewingAll = state.currentUser.role === 'ADMIN' && showAllOrders;
-    const orders = getPageContent(page).filter(order => adminViewingAll || order.userId === state.currentUser.id);
+    const dateFrom = document.getElementById('ordersDateFrom')?.value;
+    const dateTo = document.getElementById('ordersDateTo')?.value;
+    const orders = getPageContent(page)
+        .filter(order => adminViewingAll || order.userId === state.currentUser.id)
+        .filter(order => {
+            if (!dateFrom && !dateTo) return true;
+            const purchaseDate = order.dateOfPurchase ? new Date(order.dateOfPurchase) : null;
+            if (!purchaseDate) return false;
+            if (dateFrom && purchaseDate < new Date(`${dateFrom}T00:00:00`)) return false;
+            if (dateTo && purchaseDate > new Date(`${dateTo}T23:59:59`)) return false;
+            return true;
+        });
     const toggle = document.getElementById('toggleAllOrders');
     const hint = document.getElementById('ordersPageHint');
 
@@ -740,7 +856,12 @@ async function loadOrders() {
                     <button class="btn secondary" data-save-status="${order.id}">Сохранить</button>
                 ` : `<span class="badge ${order.orderStatus === 'CREATED' ? 'warn' : 'ok'}">${esc(orderStatusText(order.orderStatus))}</span>`}
             </td>
-            <td>${money(order.totalPrice)}</td>
+            <td>
+                <strong>${money(order.totalPrice)}</strong>
+                <div class="meta">Товары: ${money(order.subtotal)}</div>
+                <div class="meta">${esc(order.discountType || 'Скидка')}: ${percent(order.discountPercent)} (${money(order.discountAmount)})</div>
+                <div class="meta">Налог: ${percent(order.taxPercent || TAX_PERCENT)} (${money(order.taxAmount)})</div>
+            </td>
             <td>${shortDate(order.dateOfPurchase)}</td>
             <td>${shortDate(order.dateOfDelivery)}</td>
             <td>${esc(order.deliveryAddress || '-')}${adminViewingAll ? `<div class="meta">Пользователь ID: ${esc(order.userId)}</div>` : ''}</td>
@@ -795,9 +916,9 @@ async function initSupplies() {
     state.warehouses = warehouses;
     state.supplyProducts = getPageContent(productsPage);
     fillSelect('supplierId', state.suppliers, 'Поставщик');
-    document.getElementById('createSupply')?.addEventListener('click', openSupplyForm);
-    document.getElementById('addSupplyItem')?.addEventListener('click', addSupplyItem);
-    document.getElementById('supplyForm')?.addEventListener('submit', saveSupply);
+    document.getElementById('createSupply').addEventListener('click', openSupplyForm);
+    document.getElementById('addSupplyItem').addEventListener('click', addSupplyItem);
+    document.getElementById('supplyForm').addEventListener('submit', saveSupply);
     await loadSupplies();
 }
 
@@ -863,8 +984,8 @@ async function saveSupply(event) {
 
 async function initWarehouses() {
     await initShell(true);
-    document.getElementById('createWarehouse')?.addEventListener('click', () => editWarehouse());
-    document.getElementById('warehouseForm')?.addEventListener('submit', saveWarehouse);
+    document.getElementById('createWarehouse').addEventListener('click', () => editWarehouse());
+    document.getElementById('warehouseForm').addEventListener('submit', saveWarehouse);
     await loadWarehouses();
 }
 
@@ -985,9 +1106,9 @@ async function initProfile() {
 async function initUsers() {
     await initShell(true);
     state.size = 20;
-    document.getElementById('createUser')?.addEventListener('click', () => editUser());
-    document.getElementById('managePriceLevels')?.addEventListener('click', () => openPriceLevelModal());
-    document.getElementById('userForm')?.addEventListener('submit', saveUser);
+    document.getElementById('createUser').addEventListener('click', () => editUser());
+    document.getElementById('managePriceLevels').addEventListener('click', () => openPriceLevelModal());
+    document.getElementById('userForm').addEventListener('submit', saveUser);
     await loadUsers();
 }
 

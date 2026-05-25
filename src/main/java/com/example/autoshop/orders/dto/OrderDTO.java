@@ -14,6 +14,12 @@ public record OrderDTO(
         OffsetDateTime dateOfPurchase,
         OffsetDateTime dateOfDelivery,
         String deliveryAddress,
+        BigDecimal subtotal,
+        String discountType,
+        BigDecimal discountPercent,
+        BigDecimal discountAmount,
+        BigDecimal taxPercent,
+        BigDecimal taxAmount,
         BigDecimal totalPrice,
         List<OrderItemDTO> items
 ) {

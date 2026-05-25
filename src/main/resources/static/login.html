@@ -24,9 +24,36 @@
                 <input id="password" type="password" autocomplete="current-password" required>
             </div>
             <button class="btn" type="submit">Войти</button>
+            <button class="btn secondary" id="openRegister" type="button" style="margin-top:10px">Регистрация</button>
             <div class="error" id="loginError"></div>
         </form>
     </main>
+    <div class="modal" id="registerModal">
+        <div class="modal__content">
+            <div class="modal__head"><h2>Регистрация</h2><button class="btn secondary" data-close-modal="registerModal">Закрыть</button></div>
+            <form id="registerForm">
+                <div class="inline-fields">
+                    <div class="field"><label>Логин</label><input name="username" required></div>
+                    <div class="field"><label>Email</label><input name="email" type="email" required></div>
+                </div>
+                <div class="inline-fields">
+                    <div class="field"><label>Пароль</label><input name="password" type="password" minlength="4" required></div>
+                    <div class="field"><label>Телефон</label><input name="phone" required></div>
+                </div>
+                <div class="field"><label>Компания</label><input name="companyName" required></div>
+                <div class="address-fields" data-address-fields>
+                    <div class="inline-fields">
+                        <div class="field"><label>Город / населенный пункт</label><input name="deliveryCity" required></div>
+                        <div class="field"><label>Почтовый индекс</label><input name="deliveryPostalCode" inputmode="numeric" pattern="[0-9]{6}" required></div>
+                    </div>
+                    <div class="field"><label>Улица, дом, корпус/строение</label><input name="deliveryStreet" required></div>
+                    <div class="field"><label>Квартира / офис</label><input name="deliveryApartment"></div>
+                </div>
+                <button class="btn" type="submit">Создать аккаунт</button>
+                <div class="error" id="registerError"></div>
+            </form>
+        </div>
+    </div>
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
 </body>
