@@ -688,13 +688,13 @@ async function saveProduct(event) {
     }
 
     closeModal('productEditModal');
-    loadProductsAdmin();
+    await loadProductsAdmin();
 }
 
 async function deleteProduct(id) {
     if (!confirm('Удалить товар?')) return;
     await apiDelete(`/products/${id}`);
-    loadProductsAdmin();
+    await loadProductsAdmin();
 }
 
 async function initCart() {
@@ -880,7 +880,7 @@ async function loadOrders() {
         btn.addEventListener('click', async () => {
             const select = document.querySelector(`[data-status-order="${btn.dataset.saveStatus}"]`);
             await apiPut(`/orders/${btn.dataset.saveStatus}/status?status=${encodeURIComponent(select.value)}`, null);
-            loadOrders();
+            await loadOrders();
         });
     });
     document.querySelectorAll('[data-receipt]').forEach(btn => {
@@ -944,7 +944,7 @@ async function loadSupplies() {
     document.querySelectorAll('[data-delete-supply]').forEach(btn => btn.addEventListener('click', async () => {
         if (confirm('Удалить поставку?')) {
             await apiDelete(`/supplies/${btn.dataset.deleteSupply}`);
-            loadSupplies();
+            await loadSupplies();
         }
     }));
     renderPagination('suppliesPagination', loadSupplies);
@@ -986,7 +986,7 @@ async function saveSupply(event) {
     };
     await apiPost('/supplies', payload);
     closeModal('supplyModal');
-    loadSupplies();
+    await loadSupplies();
 }
 
 async function initWarehouses() {
@@ -1046,13 +1046,13 @@ async function saveWarehouse(event) {
     else await apiPost('/warehouses', payload);
 
     closeModal('warehouseModal');
-    loadWarehouses();
+    await loadWarehouses();
 }
 
 async function deleteWarehouse(id) {
     if (!confirm('Удалить склад?')) return;
     await apiDelete(`/warehouses/${id}`);
-    loadWarehouses();
+    await loadWarehouses();
 }
 
 async function initCategories() {
@@ -1441,13 +1441,13 @@ async function saveUser(event) {
     if (id) await apiPut(`/users/${id}`, payload);
     else await apiPost('/users', payload);
     closeModal('userModal');
-    loadUsers();
+    await loadUsers();
 }
 
 async function deleteUser(id) {
     if (!confirm('Удалить пользователя?')) return;
     await apiDelete(`/users/${id}`);
-    loadUsers();
+    await loadUsers();
 }
 
 document.addEventListener('click', event => {
