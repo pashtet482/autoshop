@@ -436,6 +436,7 @@ async function initCatalog() {
     });
     document.getElementById('resetFilters').addEventListener('click', () => {
         document.getElementById('filterForm').reset();
+        resetAttributeFilters();
         state.page = 0;
         loadCatalog();
     });
@@ -443,8 +444,91 @@ async function initCatalog() {
         state.page = 0;
         loadCatalog();
     }));
+    document.getElementById('addAttributeFilter').addEventListener('click', () => addAttributeFilterRow());
 
+    resetAttributeFilters();
     await loadCatalog();
+}
+
+function createAttributeFilterRow(name = '', value = '') {
+    const row = document.createElement('div');
+    row.className = 'attribute-filter-row';
+    row.dataset.attributeRow = '1';
+
+    const nameField = document.createElement('div');
+    nameField.className = 'field';
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Атрибут';
+    const nameInput = document.createElement('input');
+    nameInput.name = 'attributeName';
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Например, Цвет';
+    nameInput.value = name;
+    nameField.append(nameLabel, nameInput);
+
+    const valueField = document.createElement('div');
+    valueField.className = 'field';
+    const valueLabel = document.createElement('label');
+    valueLabel.textContent = 'Значение';
+    const valueInput = document.createElement('input');
+    valueInput.name = 'attributeValue';
+    valueInput.type = 'text';
+    valueInput.placeholder = 'Например, Красный';
+    valueInput.value = value;
+    valueField.append(valueLabel, valueInput);
+
+    const removeButton = document.createElement('button');
+    removeButton.className = 'btn ghost';
+    removeButton.type = 'button';
+    removeButton.title = 'Удалить атрибут';
+    removeButton.textContent = '×';
+    removeButton.addEventListener('click', () => row.remove());
+
+    row.append(nameField, valueField, removeButton);
+    return row;
+}
+
+function addAttributeFilterRow(name = '', value = '') {
+    const container = document.getElementById('attributeFilters');
+    if (!container) return;
+    container.appendChild(createAttributeFilterRow(name, value));
+}
+
+function resetAttributeFilters() {
+    const container = document.getElementById('attributeFilters');
+    if (!container) return;
+    container.innerHTML = '';
+    addAttributeFilterRow();
+}
+
+function getAttributeFilters() {
+    const container = document.getElementById('attributeFilters');
+    if (!container) return null;
+
+    const rows = Array.from(container.querySelectorAll('[data-attribute-row]'));
+    const attributes = {};
+
+    rows.forEach(row => {
+        const nameInput = row.querySelector('[name="attributeName"]');
+        const valueInput = row.querySelector('[name="attributeValue"]');
+        const name = nameInput?.value.trim();
+        const value = valueInput?.value.trim();
+        if (!name || !value) return;
+
+        const values = value.split(',').map(v => v.trim()).filter(Boolean);
+        if (!values.length) return;
+
+        if (!attributes[name]) {
+            attributes[name] = [];
+        }
+        attributes[name].push(...values);
+    });
+
+    Object.keys(attributes).forEach(key => {
+        attributes[key] = Array.from(new Set(attributes[key]));
+    });
+
+    return Object.keys(attributes).length ? attributes : null;
 }
 
 function getProductFilter() {
@@ -468,7 +552,7 @@ function getProductFilter() {
         sku: null,
         oemNumber: null,
         inStock: inStock,
-        attributes: null
+        attributes: getAttributeFilters()
     };
 }
 
