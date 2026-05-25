@@ -73,10 +73,10 @@ textarea {
 
 .header__inner {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    gap: 24px;
-    min-height: 70px;
+    gap: 12px;
+    min-height: 62px;
 }
 
 .logo {
@@ -101,14 +101,23 @@ textarea {
 .nav {
     display: flex;
     align-items: center;
-    gap: 4px;
-    flex-wrap: wrap;
+    gap: 2px;
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+    display: none;
 }
 
 .nav a {
-    padding: 10px 12px;
+    flex: 0 0 auto;
+    padding: 8px 8px;
     border-radius: var(--radius);
     color: #344252;
+    font-size: 13px;
     font-weight: 700;
 }
 
@@ -121,7 +130,14 @@ textarea {
 .header__actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.header__actions .btn {
+    min-height: 36px;
+    padding: 8px 10px;
+    font-size: 13px;
 }
 
 .page {
@@ -942,14 +958,13 @@ tr:last-child td {
 .orders-catalog-link {
     width: 150px;
     height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    flex: 0 0 150px;
     padding: 9px 10px;
     box-sizing: border-box;
-    
-    /* Сдвигает кнопку вниз, выравнивая по нижней границе инпутов */
-    margin-top: auto; 
+    margin-top: auto;
 }
-
-
 
 .attribute-editor {
     display: grid;

@@ -48,11 +48,18 @@ public class OrderController {
     public ResponseEntity<Page<OrderDTO>> getOrders(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "false") boolean otherUsers
     ) {
         boolean adminMode = isAdmin(authentication);
         return ResponseEntity.ok(
-                orderService.getAllOrders(page, size, authentication.getName(), adminMode)
+                orderService.getAllOrders(
+                        page,
+                        size,
+                        authentication.getName(),
+                        adminMode,
+                        otherUsers
+                )
         );
     }
 

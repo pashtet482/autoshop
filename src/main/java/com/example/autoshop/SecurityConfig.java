@@ -74,12 +74,30 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/api/products/search"
                         ).permitAll()
+
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/users/register"
                         ).permitAll()
 
                         .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/products",
+                                "/api/products/*/image",
+                                "/api/categories/**",
+                                "/api/brands/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/products/**",
+                                "/api/categories/**",
+                                "/api/brands/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/products/**",
                                 "/api/categories/**",
                                 "/api/brands/**"
                         ).hasRole("ADMIN")

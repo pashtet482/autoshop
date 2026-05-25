@@ -367,12 +367,16 @@ function splitDeliveryAddress(address = '') {
     };
 }
 
-function fillDeliveryAddressFields(address) {
+function deliveryField(root, name) {
+    return root.querySelector?.(`[name="${name}"]`) || document.getElementById(name);
+}
+
+function fillDeliveryAddressFields(address, root = document) {
     const parsed = splitDeliveryAddress(address);
-    const city = document.getElementById('deliveryCity');
-    const postalCode = document.getElementById('deliveryPostalCode');
-    const street = document.getElementById('deliveryStreet');
-    const apartment = document.getElementById('deliveryApartment');
+    const city = deliveryField(root, 'deliveryCity');
+    const postalCode = deliveryField(root, 'deliveryPostalCode');
+    const street = deliveryField(root, 'deliveryStreet');
+    const apartment = deliveryField(root, 'deliveryApartment');
 
     if (city) city.value = parsed.city;
     if (postalCode) postalCode.value = parsed.postalCode;
@@ -380,11 +384,11 @@ function fillDeliveryAddressFields(address) {
     if (apartment) apartment.value = parsed.apartment;
 }
 
-function collectDeliveryAddress() {
-    const city = document.getElementById('deliveryCity')?.value.trim();
-    const postalCode = document.getElementById('deliveryPostalCode')?.value.trim();
-    const street = document.getElementById('deliveryStreet')?.value.trim();
-    const apartment = document.getElementById('deliveryApartment')?.value.trim();
+function collectDeliveryAddress(root = document) {
+    const city = deliveryField(root, 'deliveryCity')?.value.trim();
+    const postalCode = deliveryField(root, 'deliveryPostalCode')?.value.trim();
+    const street = deliveryField(root, 'deliveryStreet')?.value.trim();
+    const apartment = deliveryField(root, 'deliveryApartment')?.value.trim();
 
     return [
         city ? `Город: ${city}` : '',
@@ -671,7 +675,11 @@ async function saveProduct(event) {
         if (fileInput && fileInput.files && fileInput.files.length > 0) {
             const fd = new FormData();
             fd.append('file', fileInput.files[0]);
-            const resp = await fetch(`/api/products/${saved.id}/image`, { method: 'POST', body: fd });
+            const resp = await fetch(`/api/products/${saved.id}/image`, {
+                method: 'POST',
+                headers: getAuthHeaders(false),
+                body: fd
+            });
             if (!resp.ok) throw new Error('Image upload failed');
         }
     } catch (e) {
@@ -820,13 +828,12 @@ async function initOrders() {
 }
 
 async function loadOrders() {
-    const page = await apiGet(`/orders?${pageParam()}`);
+    const page = await apiGet(`/orders?${pageParam()}&otherUsers=${showAllOrders}`);
     if (!applyPageInfo(page, loadOrders)) return;
-    const adminViewingAll = state.currentUser.role === 'ADMIN' && showAllOrders;
+    const adminViewingOtherUsers = state.currentUser.role === 'ADMIN' && showAllOrders;
     const dateFrom = document.getElementById('ordersDateFrom')?.value;
     const dateTo = document.getElementById('ordersDateTo')?.value;
     const orders = getPageContent(page)
-        .filter(order => adminViewingAll || order.userId === state.currentUser.id)
         .filter(order => {
             if (!dateFrom && !dateTo) return true;
             const purchaseDate = order.dateOfPurchase ? new Date(order.dateOfPurchase) : null;
@@ -842,14 +849,14 @@ async function loadOrders() {
         toggle.textContent = showAllOrders ? 'Мои заказы' : 'Заказы других пользователей';
     }
     if (hint) {
-        hint.textContent = adminViewingAll ? 'Все заказы клиентов с управлением статусами.' : 'История оформленных заказов.';
+        hint.textContent = adminViewingOtherUsers ? 'Заказы других пользователей с управлением статусами.' : 'История оформленных заказов.';
     }
 
     document.querySelector('#ordersTable tbody').innerHTML = orders.map(order => `
         <tr>
             <td>#${order.id}</td>
             <td>
-                ${adminViewingAll ? `
+                ${adminViewingOtherUsers ? `
                     <select class="status-select" data-status-order="${order.id}">
                         ${orderStatusOptions.map(status => `<option value="${status}" ${status === order.orderStatus ? 'selected' : ''}>${esc(orderStatusText(status))}</option>`).join('')}
                     </select>
@@ -864,7 +871,7 @@ async function loadOrders() {
             </td>
             <td>${shortDate(order.dateOfPurchase)}</td>
             <td>${shortDate(order.dateOfDelivery)}</td>
-            <td>${esc(order.deliveryAddress || '-')}${adminViewingAll ? `<div class="meta">Пользователь ID: ${esc(order.userId)}</div>` : ''}</td>
+            <td>${esc(order.deliveryAddress || '-')}${adminViewingOtherUsers ? `<div class="meta">Пользователь ID: ${esc(order.userId)}</div>` : ''}</td>
             <td><button class="btn secondary" data-receipt="${order.id}">Скачать чек</button></td>
         </tr>
     `).join('') || '<tr><td colspan="7">Заказов пока нет.</td></tr>';
@@ -1048,6 +1055,187 @@ async function deleteWarehouse(id) {
     loadWarehouses();
 }
 
+async function initCategories() {
+    await initShell(true);
+    document.getElementById('createCategory').addEventListener('click', () => editCategory());
+    document.getElementById('categoryForm').addEventListener('submit', saveCategory);
+    await loadCategoriesAdmin();
+}
+
+async function loadCategoriesAdmin() {
+    const categories = await apiGet('/categories');
+    document.querySelector('#categoriesTable tbody').innerHTML = categories.map(category => `
+        <tr>
+            <td>${category.id}</td>
+            <td><strong>${esc(category.name)}</strong></td>
+            <td class="actions">
+                <button class="btn secondary" data-edit-category="${category.id}">Изменить</button>
+                <button class="btn danger" data-delete-category="${category.id}">Удалить</button>
+            </td>
+        </tr>
+    `).join('') || '<tr><td colspan="3">Категорий пока нет.</td></tr>';
+    document.querySelectorAll('[data-edit-category]').forEach(btn => btn.addEventListener('click', () => editCategory(btn.dataset.editCategory)));
+    document.querySelectorAll('[data-delete-category]').forEach(btn => btn.addEventListener('click', () => deleteCategory(btn.dataset.deleteCategory)));
+}
+
+async function editCategory(id) {
+    const form = document.getElementById('categoryForm');
+    form.reset();
+    document.getElementById('categoryId').value = '';
+    document.getElementById('categoryModalTitle').textContent = id ? 'Редактирование категории' : 'Новая категория';
+
+    if (id) {
+        const category = await apiGet(`/categories/${id}`);
+        document.getElementById('categoryId').value = category.id;
+        form.name.value = category.name || '';
+    }
+
+    openModal('categoryModal');
+}
+
+async function saveCategory(event) {
+    event.preventDefault();
+    const form = event.target;
+    const id = document.getElementById('categoryId').value;
+    const payload = { name: form.name.value.trim() };
+
+    if (id) await apiPut(`/categories/${id}`, payload);
+    else await apiPost('/categories', payload);
+
+    closeModal('categoryModal');
+    await loadCategoriesAdmin();
+}
+
+async function deleteCategory(id) {
+    if (!confirm('Удалить категорию?')) return;
+    await apiDelete(`/categories/${id}`);
+    await loadCategoriesAdmin();
+}
+
+async function initBrands() {
+    await initShell(true);
+    document.getElementById('createBrand').addEventListener('click', () => editBrand());
+    document.getElementById('brandForm').addEventListener('submit', saveBrand);
+    await loadBrandsAdmin();
+}
+
+async function loadBrandsAdmin() {
+    const brands = await apiGet('/brands');
+    document.querySelector('#brandsTable tbody').innerHTML = brands.map(brand => `
+        <tr>
+            <td>${brand.id}</td>
+            <td><strong>${esc(brand.name)}</strong></td>
+            <td>${esc(brand.country || '-')}</td>
+            <td class="actions">
+                <button class="btn secondary" data-edit-brand="${brand.id}">Изменить</button>
+                <button class="btn danger" data-delete-brand="${brand.id}">Удалить</button>
+            </td>
+        </tr>
+    `).join('') || '<tr><td colspan="4">Брендов пока нет.</td></tr>';
+    document.querySelectorAll('[data-edit-brand]').forEach(btn => btn.addEventListener('click', () => editBrand(btn.dataset.editBrand)));
+    document.querySelectorAll('[data-delete-brand]').forEach(btn => btn.addEventListener('click', () => deleteBrand(btn.dataset.deleteBrand)));
+}
+
+async function editBrand(id) {
+    const form = document.getElementById('brandForm');
+    form.reset();
+    document.getElementById('brandId').value = '';
+    document.getElementById('brandModalTitle').textContent = id ? 'Редактирование бренда' : 'Новый бренд';
+
+    if (id) {
+        const brand = await apiGet(`/brands/${id}`);
+        document.getElementById('brandId').value = brand.id;
+        form.name.value = brand.name || '';
+        form.country.value = brand.country || '';
+    }
+
+    openModal('brandModal');
+}
+
+async function saveBrand(event) {
+    event.preventDefault();
+    const form = event.target;
+    const id = document.getElementById('brandId').value;
+    const payload = {
+        name: form.name.value.trim(),
+        country: form.country.value.trim()
+    };
+
+    if (id) await apiPut(`/brands/${id}`, payload);
+    else await apiPost('/brands', payload);
+
+    closeModal('brandModal');
+    await loadBrandsAdmin();
+}
+
+async function deleteBrand(id) {
+    if (!confirm('Удалить бренд?')) return;
+    await apiDelete(`/brands/${id}`);
+    await loadBrandsAdmin();
+}
+
+async function initSuppliersAdmin() {
+    await initShell(true);
+    document.getElementById('createSupplier').addEventListener('click', () => editSupplierRecord());
+    document.getElementById('supplierForm').addEventListener('submit', saveSupplierRecord);
+    await loadSuppliersAdmin();
+}
+
+async function loadSuppliersAdmin() {
+    const suppliers = await apiGet('/suppliers');
+    document.querySelector('#suppliersTable tbody').innerHTML = suppliers.map(supplier => `
+        <tr>
+            <td>${supplier.id}</td>
+            <td><strong>${esc(supplier.name)}</strong></td>
+            <td>${esc(supplier.phone || '-')}</td>
+            <td class="actions">
+                <button class="btn secondary" data-edit-supplier="${supplier.id}">Изменить</button>
+                <button class="btn danger" data-delete-supplier="${supplier.id}">Удалить</button>
+            </td>
+        </tr>
+    `).join('') || '<tr><td colspan="4">Поставщиков пока нет.</td></tr>';
+    document.querySelectorAll('[data-edit-supplier]').forEach(btn => btn.addEventListener('click', () => editSupplierRecord(btn.dataset.editSupplier)));
+    document.querySelectorAll('[data-delete-supplier]').forEach(btn => btn.addEventListener('click', () => deleteSupplierRecord(btn.dataset.deleteSupplier)));
+}
+
+async function editSupplierRecord(id) {
+    const form = document.getElementById('supplierForm');
+    form.reset();
+    document.getElementById('supplierRecordId').value = '';
+    document.getElementById('supplierModalTitle').textContent = id ? 'Редактирование поставщика' : 'Новый поставщик';
+
+    if (id) {
+        const supplier = await apiGet(`/suppliers/${id}`);
+        document.getElementById('supplierRecordId').value = supplier.id;
+        form.name.value = supplier.name || '';
+        form.phone.value = supplier.phone || '';
+    }
+
+    openModal('supplierModal');
+}
+
+async function saveSupplierRecord(event) {
+    event.preventDefault();
+    const form = event.target;
+    const id = document.getElementById('supplierRecordId').value;
+    const payload = {
+        name: form.name.value.trim(),
+        phone: form.phone.value.trim()
+    };
+
+    if (id) await apiPut(`/suppliers/${id}`, payload);
+    else await apiPost('/suppliers', payload);
+
+    closeModal('supplierModal');
+    await loadSuppliersAdmin();
+}
+
+async function deleteSupplierRecord(id) {
+    if (!confirm('Удалить поставщика?')) return;
+    await apiDelete(`/suppliers/${id}`);
+    await loadSuppliersAdmin();
+}
+
 function showMessage(id, text) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -1068,7 +1256,7 @@ async function initProfile() {
 
     form.username.value = state.currentUser.username || '';
     form.email.value = state.currentUser.email || '';
-    form.deliveryAddress.value = state.currentUser.deliveryAddress || '';
+    fillDeliveryAddressFields(state.currentUser.deliveryAddress || '', form);
     form.companyName.value = state.currentUser.companyName || '';
     form.phone.value = state.currentUser.phone || '';
 
@@ -1078,7 +1266,7 @@ async function initProfile() {
             username: form.username.value.trim(),
             password: null,
             email: form.email.value.trim(),
-            deliveryAddress: form.deliveryAddress.value.trim(),
+            deliveryAddress: collectDeliveryAddress(form),
             companyName: form.companyName.value.trim(),
             phone: form.phone.value.trim(),
             role: null,
@@ -1289,6 +1477,9 @@ window.addEventListener('load', () => {
         profile: initProfile,
         supplies: initSupplies,
         warehouses: initWarehouses,
+        categories: initCategories,
+        brands: initBrands,
+        suppliers: initSuppliersAdmin,
         users: initUsers
     }[page];
 

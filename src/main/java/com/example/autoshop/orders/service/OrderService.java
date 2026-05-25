@@ -163,7 +163,8 @@ public class OrderService {
             int page,
             int size,
             String currentUsername,
-            boolean adminMode
+            boolean adminMode,
+            boolean otherUsersMode
     ) {
 
         Pageable pageable = PageRequest.of(
@@ -172,8 +173,8 @@ public class OrderService {
                 Sort.by("id").descending()
         );
 
-        return (adminMode
-                ? orderRepository.findAll(pageable)
+        return (adminMode && otherUsersMode
+                ? orderRepository.findAllByUser_UsernameNot(currentUsername, pageable)
                 : orderRepository.findAllByUser_Username(currentUsername, pageable))
                 .map(this::toOrderDto);
     }
