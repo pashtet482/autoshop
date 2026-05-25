@@ -19,6 +19,8 @@ public interface UserMapper {
     @Mapping(target = "passwordHash", ignore = true)
     @Mapping(target = "priceLevel", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     User toEntity(InputUserDTO dto);
 
     @Mapping(source = "priceLevel.id", target = "priceLevelId")
@@ -30,6 +32,8 @@ public interface UserMapper {
     @Mapping(target = "passwordHash", ignore = true)
     @Mapping(target = "priceLevel", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     void updateUser(
             InputUserDTO dto,
             @MappingTarget User user

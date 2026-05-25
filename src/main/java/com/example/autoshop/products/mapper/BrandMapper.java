@@ -12,10 +12,14 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface BrandMapper {
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     Brand toEntity(InputBrandDTO dto);
 
     BrandDTO toDto(Brand brand);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     void updateBrand(InputBrandDTO dto, @MappingTarget Brand brand);
 }

@@ -13,10 +13,14 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface CategoryMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     Category toEntity(InputCategoryDto dto);
 
     CategoryDTO toDto(Category category);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     void updateCategory(InputCategoryDto dto, @MappingTarget Category category);
 }

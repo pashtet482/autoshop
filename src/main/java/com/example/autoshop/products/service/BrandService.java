@@ -20,6 +20,7 @@ public class BrandService {
 
     private @NonNull Brand findBrandById(Long id){
        return brandRepository.findById(id)
+               .filter(Brand::isActive)
                .orElseThrow(() -> (new EntityNotFoundException("Brand with id: " + id + " not found")));
     }
 
@@ -31,6 +32,7 @@ public class BrandService {
 
     public List<BrandDTO> getAllBrands(){
         return brandRepository.findAll().stream()
+                .filter(Brand::isActive)
                 .map(brandMapper::toDto)
                 .toList();
     }
@@ -49,6 +51,8 @@ public class BrandService {
     }
 
     public void deleteBrand(Long id){
-        brandRepository.delete(findBrandById(id));
+        Brand brand = findBrandById(id);
+        brand.markDeleted();
+        brandRepository.save(brand);
     }
 }

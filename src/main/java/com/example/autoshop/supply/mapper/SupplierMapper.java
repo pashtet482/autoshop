@@ -12,10 +12,14 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface SupplierMapper {
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     Supplier toEntity(InputSupplierDTO dto);
 
     SupplierDTO toDto(Supplier supplier);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     void updateSupplier(InputSupplierDTO dto, @MappingTarget Supplier supplier);
 }

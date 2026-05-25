@@ -21,7 +21,7 @@ public class CustomUserDetailsService
             @NonNull String username
     ) throws UsernameNotFoundException {
 
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameAndIsDeletedFalse(username)
                 .orElseThrow(() ->
                         new UsernameNotFoundException(
                                 "User not found"

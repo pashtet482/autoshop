@@ -20,6 +20,8 @@ public interface ProductMapper{
     @Mapping(target = "brand", ignore = true)
     @Mapping(target = "stocks", ignore = true)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     Product createProduct(CreateProductDTO dto);
 
     ProductDTO toDto(Product product);
@@ -28,5 +30,7 @@ public interface ProductMapper{
     @Mapping(target = "brand", ignore = true)
     @Mapping(target = "stocks", ignore = true)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     void updateProduct(UpdateProductDTO dto, @MappingTarget Product product);
 }

@@ -22,6 +22,8 @@ public interface OrderMapper {
     @Mapping(target = "dateOfDelivery", ignore = true)
     @Mapping(target = "totalPrice", ignore = true)
     @Mapping(target = "items", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     Order toEntity(InputOrderDTO dto);
 
     @Mapping(source = "user.id", target = "userId")

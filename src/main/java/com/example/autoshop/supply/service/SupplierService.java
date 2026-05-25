@@ -20,6 +20,7 @@ public class SupplierService {
 
     private @NonNull Supplier findSupplierById(Long id) {
         return supplierRepository.findById(id)
+                .filter(Supplier::isActive)
                 .orElseThrow(() -> new EntityNotFoundException("Supplier with id: " + id + " not found"));
     }
 
@@ -31,6 +32,7 @@ public class SupplierService {
 
     public List<SupplierDTO> getAllSuppliers() {
         return supplierRepository.findAll().stream()
+                .filter(Supplier::isActive)
                 .map(supplierMapper::toDto)
                 .toList();
     }
@@ -49,6 +51,8 @@ public class SupplierService {
     }
 
     public void deleteSupplier(Long id) {
-        supplierRepository.delete(findSupplierById(id));
+        Supplier supplier = findSupplierById(id);
+        supplier.markDeleted();
+        supplierRepository.save(supplier);
     }
 }

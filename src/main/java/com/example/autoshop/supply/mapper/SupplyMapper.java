@@ -17,6 +17,8 @@ public interface SupplyMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(source = "supplierId", target = "supplier.id")
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     Supply toEntity(InputSupplyDTO dto);
 
     @Mapping(source = "supplier.id", target = "supplierId")
@@ -25,6 +27,8 @@ public interface SupplyMapper {
     @Mapping(target = "supplier", ignore = true)
     @Mapping(target = "items", ignore = true)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     void updateSupply(
             InputSupplyDTO dto,
             @MappingTarget Supply supply

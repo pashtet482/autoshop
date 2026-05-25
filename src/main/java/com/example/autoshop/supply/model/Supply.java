@@ -1,5 +1,6 @@
 package com.example.autoshop.supply.model;
 
+import com.example.autoshop.common.model.SoftDeletable;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,7 @@ import java.util.List;
 @Entity
 @Table(name = "supplies")
 @NoArgsConstructor
-public class Supply {
+public class Supply extends SoftDeletable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

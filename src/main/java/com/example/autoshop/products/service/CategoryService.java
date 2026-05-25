@@ -32,6 +32,7 @@ public class CategoryService {
 
     private @NonNull Category findCategoryById(Long id){
         return categoryRepository.findById(id)
+                .filter(Category::isActive)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id: " + id + " not found"));
     }
 
@@ -46,11 +47,13 @@ public class CategoryService {
 
     public void deleteCategory(Long id){
         Category category = findCategoryById(id);
-        categoryRepository.delete(category);
+        category.markDeleted();
+        categoryRepository.save(category);
     }
 
     public List<CategoryDTO> getAllCategories(){
         return categoryRepository.findAll().stream()
+                .filter(Category::isActive)
                 .map(categoryMapper::toDto)
                 .toList();
     }

@@ -9,7 +9,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long>, QuerydslPredicateExecutor<Order> {
-    Page<Order> findAllByUser_Username(String username, Pageable pageable);
 
     Page<Order> findAllByUser_UsernameNot(String username, Pageable pageable);
+
+    Page<Order> findAllByUser_UsernameAndIsDeletedFalse(String username, Pageable pageable);
+
+    Page<Order> findAllByUser_UsernameNotAndIsDeletedFalse(String username, Pageable pageable);
 }

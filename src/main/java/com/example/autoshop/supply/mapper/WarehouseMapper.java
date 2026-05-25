@@ -12,10 +12,14 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface WarehouseMapper {
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     Warehouse toEntity(InputWarehouseDTO dto);
 
     WarehouseDTO toDto(Warehouse warehouse);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     void updateWarehouse(InputWarehouseDTO dto, @MappingTarget Warehouse warehouse);
 }

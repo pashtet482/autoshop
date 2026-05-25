@@ -20,6 +20,7 @@ public class WarehouseService {
 
     private @NonNull Warehouse findWarehouseById(Long id) {
         return warehouseRepository.findById(id)
+                .filter(Warehouse::isActive)
                 .orElseThrow(() -> new EntityNotFoundException("Warehouse with id: " + id + " not found"));
     }
 
@@ -31,6 +32,7 @@ public class WarehouseService {
 
     public List<WarehouseDTO> getAllWarehouses() {
         return warehouseRepository.findAll().stream()
+                .filter(Warehouse::isActive)
                 .map(warehouseMapper::toDto)
                 .toList();
     }
@@ -49,6 +51,8 @@ public class WarehouseService {
     }
 
     public void deleteWarehouse(Long id) {
-        warehouseRepository.delete(findWarehouseById(id));
+        Warehouse warehouse = findWarehouseById(id);
+        warehouse.markDeleted();
+        warehouseRepository.save(warehouse);
     }
 }

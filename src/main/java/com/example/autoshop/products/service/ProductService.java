@@ -73,21 +73,25 @@ public class ProductService {
 
     public void deleteProduct(Long id){
         Product product = findProductById(id);
-        productRepository.delete(product);
+        product.markDeleted();
+        productRepository.save(product);
     }
 
     private @NonNull Product findProductById(Long id){
         return productRepository.findById(id)
+                .filter(Product::isActive)
                 .orElseThrow(() -> new EntityNotFoundException("Product with id " + id + " not found"));
     }
 
     private @NonNull Brand findBrandById(Long id){
         return brandRepository.findById(id)
+                .filter(Brand::isActive)
                 .orElseThrow(() -> new EntityNotFoundException("Brand with id: " + id + " not found"));
     }
 
     private @NonNull Category findCategoryById(Long id){
         return categoryRepository.findById(id)
+                .filter(Category::isActive)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id: " + id + " not found"));
     }
 
@@ -99,6 +103,7 @@ public class ProductService {
     ) {
         QProduct product = QProduct.product;
         BooleanBuilder builder = new BooleanBuilder();
+        builder.and(product.isDeleted.isFalse());
 
         String commonQuery = null;
         if (filter.query() != null && !filter.query().isBlank()) {
@@ -193,7 +198,7 @@ public class ProductService {
             int idx = original.lastIndexOf('.');
             if (idx >= 0) ext = original.substring(idx);
 
-            String filename = UUID.randomUUID().toString() + ext;
+            String filename = UUID.randomUUID() + ext;
             Path target = uploadsDir.resolve(filename);
             Files.copy(file.getInputStream(), target);
 

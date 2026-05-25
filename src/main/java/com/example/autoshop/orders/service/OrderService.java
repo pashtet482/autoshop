@@ -175,8 +175,8 @@ public class OrderService {
         );
 
         return (adminMode && otherUsersMode
-                ? orderRepository.findAllByUser_UsernameNot(currentUsername, pageable)
-                : orderRepository.findAllByUser_Username(currentUsername, pageable))
+                ? orderRepository.findAllByUser_UsernameNotAndIsDeletedFalse(currentUsername, pageable)
+                : orderRepository.findAllByUser_UsernameAndIsDeletedFalse(currentUsername, pageable))
                 .map(this::toOrderDto);
     }
 
@@ -186,6 +186,7 @@ public class OrderService {
     ) {
 
         Order order = orderRepository.findById(id)
+                .filter(Order::isActive)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден")
                 );
@@ -200,23 +201,24 @@ public class OrderService {
 
     public void deleteOrder(Long id) {
 
-        if (!orderRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден");
-        }
-
-        orderRepository.deleteById(id);
+        Order order = orderRepository.findById(id)
+                .filter(Order::isActive)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден"));
+        order.markDeleted();
+        orderRepository.save(order);
     }
 
     private @NonNull User findUserById(Long id) {
 
         return userRepository.findById(id)
+                .filter(User::isActive)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден")
                 );
     }
 
     private @NonNull User findUserByUsername(String username) {
-        return userRepository.findByUsername(username)
+        return userRepository.findByUsernameAndIsDeletedFalse(username)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден")
                 );
@@ -225,6 +227,7 @@ public class OrderService {
     private @NonNull Product findProductById(Long id) {
 
         return productRepository.findById(id)
+                .filter(Product::isActive)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Товар не найден")
                 );
@@ -234,6 +237,7 @@ public class OrderService {
                                                String currentUsername,
                                                boolean adminMode) {
         Order order = orderRepository.findById(id)
+                .filter(Order::isActive)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден")
                 );

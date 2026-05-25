@@ -1,5 +1,6 @@
 package com.example.autoshop.products.model;
 
+import com.example.autoshop.common.model.SoftDeletable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,7 +17,7 @@ import java.util.List;
 @Entity
 @Table(name = "products")
 @NoArgsConstructor
-public class Product {
+public class Product extends SoftDeletable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

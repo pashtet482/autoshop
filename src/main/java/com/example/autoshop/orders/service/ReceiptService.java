@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -104,7 +105,7 @@ public class ReceiptService {
 
         BigDecimal discountedSubtotal = originalTotal.multiply(ratio);
         BigDecimal taxAmount = discountedSubtotal.multiply(taxPercent)
-                .divide(BigDecimal.valueOf(100));
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         BigDecimal finalTotal = order.getTotalPrice();
         BigDecimal discountAmount = originalTotal.subtract(discountedSubtotal);
 
@@ -260,6 +261,7 @@ public class ReceiptService {
                                                String currentUsername,
                                                boolean adminMode) {
         Order order = orderRepository.findById(orderId)
+                .filter(Order::isActive)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден")
                 );

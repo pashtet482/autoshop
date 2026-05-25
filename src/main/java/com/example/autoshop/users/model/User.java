@@ -1,5 +1,6 @@
 package com.example.autoshop.users.model;
 
+import com.example.autoshop.common.model.SoftDeletable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,7 +17,7 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
-public class User {
+public class User extends SoftDeletable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

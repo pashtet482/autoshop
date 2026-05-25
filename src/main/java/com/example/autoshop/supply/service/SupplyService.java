@@ -96,6 +96,7 @@ public class SupplyService {
     public SupplyDTO getSupplyById(Long id) {
 
         Supply supply = supplyRepository.findById(id)
+                .filter(Supply::isActive)
                 .orElseThrow(() -> new RuntimeException("Supply not found"));
 
         return supplyMapper.toDto(supply);
@@ -115,13 +116,14 @@ public class SupplyService {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return supplyRepository.findAll(pageable)
+        return supplyRepository.findAllByIsDeletedFalse(pageable)
                 .map(supplyMapper::toDto);
     }
 
     public SupplyDTO updateSupply(Long id, InputSupplyDTO dto) {
 
         Supply supply = supplyRepository.findById(id)
+                .filter(Supply::isActive)
                 .orElseThrow(() -> new RuntimeException("Supply not found"));
 
         supplyMapper.updateSupply(dto, supply);
@@ -138,23 +140,28 @@ public class SupplyService {
     public void deleteSupply(Long id) {
 
         Supply supply = supplyRepository.findById(id)
+                .filter(Supply::isActive)
                 .orElseThrow(() -> new RuntimeException("Supply not found"));
 
-        supplyRepository.delete(supply);
+        supply.markDeleted();
+        supplyRepository.save(supply);
     }
 
     private Supplier findSupplierById(Long id) {
         return supplierRepository.findById(id)
+                .filter(Supplier::isActive)
                 .orElseThrow(() -> new RuntimeException("Supplier not found"));
     }
 
     private Product findProductById(Long id) {
         return productRepository.findById(id)
+                .filter(Product::isActive)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
     }
 
     private Warehouse findWarehouseById(Long id) {
         return warehouseRepository.findById(id)
+                .filter(Warehouse::isActive)
                 .orElseThrow(() -> new RuntimeException("Warehouse not found"));
     }
 }

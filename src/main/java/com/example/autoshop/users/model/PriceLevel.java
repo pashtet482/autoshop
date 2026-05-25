@@ -1,5 +1,6 @@
 package com.example.autoshop.users.model;
 
+import com.example.autoshop.common.model.SoftDeletable;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +11,7 @@ import java.math.BigDecimal;
 @Setter
 @Entity
 @Table(name = "price_levels")
-public class PriceLevel {
+public class PriceLevel extends SoftDeletable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

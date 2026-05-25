@@ -52,6 +52,7 @@ public class UserService {
     public UserDTO getUserById(Long id) {
 
         return userRepository.findById(id)
+                .filter(User::isActive)
                 .map(userMapper::toDto)
                 .orElseThrow(() ->
                         new RuntimeException("User not found")
@@ -61,7 +62,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserDTO getUserByUsername(String username) {
 
-        return userRepository.findByUsername(username)
+        return userRepository.findByUsernameAndIsDeletedFalse(username)
                 .map(userMapper::toDto)
                 .orElseThrow(() ->
                         new RuntimeException("User not found")
@@ -80,7 +81,7 @@ public class UserService {
                 Sort.by("id").ascending()
         );
 
-        return userRepository.findAll(pageable)
+        return userRepository.findAllByIsDeletedFalse(pageable)
                 .map(userMapper::toDto);
     }
 
@@ -90,6 +91,7 @@ public class UserService {
     ) {
 
         User user = userRepository.findById(id)
+                .filter(User::isActive)
                 .orElseThrow(() ->
                         new RuntimeException("User not found")
                 );
@@ -118,7 +120,7 @@ public class UserService {
             InputUserDTO dto
     ) {
 
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameAndIsDeletedFalse(username)
                 .orElseThrow(() ->
                         new RuntimeException("User not found")
                 );
@@ -148,16 +150,17 @@ public class UserService {
 
     public void deleteUser(Long id) {
 
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found");
-        }
-
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .filter(User::isActive)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.markDeleted();
+        userRepository.save(user);
     }
 
     private PriceLevel findPriceLevelById(Long id) {
 
         return priceLevelRepository.findById(id)
+                .filter(PriceLevel::isActive)
                 .orElseThrow(() ->
                         new RuntimeException("Price level not found")
                 );
@@ -169,6 +172,7 @@ public class UserService {
     ) {
 
         User user = userRepository.findById(userId)
+                .filter(User::isActive)
                 .orElseThrow(() ->
                         new RuntimeException("User not found")
                 );
@@ -194,7 +198,7 @@ public class UserService {
             @NonNull ChangePasswordDTO dto
     ) {
 
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameAndIsDeletedFalse(username)
                 .orElseThrow(() ->
                         new RuntimeException("User not found")
                 );
@@ -204,7 +208,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public java.util.List<PriceLevel> getAllPriceLevels() {
-        return priceLevelRepository.findAll();
+        return priceLevelRepository.findAllByIsDeletedFalse();
     }
 
         public PriceLevel createPriceLevel(PriceLevel dto) {
@@ -222,7 +226,8 @@ public class UserService {
         }
 
         public void deletePriceLevel(Long id) {
-                if (!priceLevelRepository.existsById(id)) throw new RuntimeException("Price level not found");
-                priceLevelRepository.deleteById(id);
+                PriceLevel priceLevel = findPriceLevelById(id);
+                priceLevel.markDeleted();
+                priceLevelRepository.save(priceLevel);
         }
 }
