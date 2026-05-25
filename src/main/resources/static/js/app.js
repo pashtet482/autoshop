@@ -635,6 +635,9 @@ async function editProduct(id) {
     document.getElementById('productId').value = '';
     document.getElementById('productModalTitle').textContent = id ? 'Редактирование товара' : 'Новый товар';
 
+    const preview = document.getElementById('productImagePreview');
+    if (preview) preview.innerHTML = '';
+
     if (id) {
         const product = await apiGet(`/products/${id}`);
         document.getElementById('productId').value = product.id;
@@ -645,7 +648,6 @@ async function editProduct(id) {
         form.sku.value = product.sku || '';
         form.oemNumber.value = product.oemNumber || '';
         const imageUrl = getProductImage(product);
-        const preview = document.getElementById('productImagePreview');
         if (preview) preview.innerHTML = imageUrl ? `<img src="${esc(imageUrl)}" style="max-width:140px;" alt={product.name}>` : '';
         form.description.value = product.description || '';
     }
