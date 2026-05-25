@@ -8,35 +8,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().requestMatchers(
-                "/",
-                "/index.html",
-                "/login.html",
-                "/products.html",
-                "/orders.html",
-                "/supplies.html",
-                "/warehouses.html",
-                "/users.html",
-                "/cart.html",
-                "/profile.html",
-                "/uploads/**",
-                "/css/**",
-                "/js/**"
-        );
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -48,9 +30,8 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // Публичные страницы
                         .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
                                 "/",
                                 "/index.html",
                                 "/login.html",
@@ -60,68 +41,85 @@ public class SecurityConfig {
                                 "/warehouses.html",
                                 "/users.html",
                                 "/cart.html",
-                                "/profile.html",
-                                "/uploads/**",
-                                "/css/**",
-                                "/js/**"
+                                "/profile.html"
                         ).permitAll()
 
-                        .requestMatchers(HttpMethod.GET,
+                        // Статика
+                        .requestMatchers(
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/uploads/**",
+                                "/favicon.ico"
+                        ).permitAll()
+
+                        // Swagger
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
+                        // Публичные API
+                        .requestMatchers(
+                                HttpMethod.GET,
                                 "/api/products/**",
                                 "/api/categories/**",
                                 "/api/brands/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.POST,
+
+                        .requestMatchers(
+                                HttpMethod.POST,
                                 "/api/products/search"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET,
+
+                        // Пользователь
+                        .requestMatchers(
+                                HttpMethod.GET,
                                 "/api/users/me"
                         ).hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT,
+
+                        .requestMatchers(
+                                HttpMethod.PUT,
                                 "/api/users/me"
                         ).hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST,
+
+                        .requestMatchers(
+                                HttpMethod.POST,
                                 "/api/users/me/change-password"
                         ).hasAnyRole("USER", "ADMIN")
+
+                        // Админ
                         .requestMatchers(
-                                "/api/users/*/change-password"
-                        ).hasRole("ADMIN")
-                        .requestMatchers(
+                                "/api/users/*/change-password",
                                 "/api/supplies/**",
-                                "/api/users/**"
-                        ).hasRole("ADMIN")
-                        .requestMatchers(
+                                "/api/users/**",
                                 "/api/warehouses/**",
                                 "/api/suppliers/**"
                         ).hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/orders/**"
-                        ).hasAnyRole(
-                                "USER",
-                                "ADMIN"
-                        )
-                        .requestMatchers(HttpMethod.POST,
-                                "/api/orders"
-                        ).hasAnyRole(
-                                "USER",
-                                "ADMIN"
-                        )
-                        .requestMatchers(HttpMethod.PUT,
-                                "/api/orders/**"
-                        ).hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE,
-                                "/api/orders/**"
-                        ).hasRole("ADMIN")
+                        // Заказы
                         .requestMatchers(
+                                HttpMethod.GET,
                                 "/api/orders/**"
-                        ).hasAnyRole(
-                                "USER",
-                                "ADMIN"
-                        )
+                        ).hasAnyRole("USER", "ADMIN")
 
-                        .anyRequest()
-                        .authenticated()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/orders"
+                        ).hasAnyRole("USER", "ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/orders/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/orders/**"
+                        ).hasRole("ADMIN")
+
+                        // Всё остальное требует логин
+                        .anyRequest().authenticated()
                 )
 
                 .httpBasic(Customizer.withDefaults());

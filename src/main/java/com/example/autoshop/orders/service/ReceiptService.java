@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -81,6 +82,32 @@ public class ReceiptService {
 
         DateTimeFormatter formatter =
                 DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        BigDecimal originalTotal = order.getItems()
+                .stream()
+                .map(item ->
+                        item.getPriceAtPurchase().multiply(
+                                java.math.BigDecimal.valueOf(
+                                        item.getQuantity()
+                                )
+                        )
+                )
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+
+        BigDecimal finalTotal = order.getTotalPrice();
+
+        BigDecimal discountAmount =
+                originalTotal.subtract(finalTotal);
+
+        BigDecimal ratio =
+                order.getUser()
+                        .getPriceLevel()
+                        .getRatio();
+
+        BigDecimal discountPercent =
+                java.math.BigDecimal.ONE
+                        .subtract(ratio)
+                        .multiply(java.math.BigDecimal.valueOf(100));
 
         return """
             <!DOCTYPE html>
@@ -169,8 +196,23 @@ public class ReceiptService {
                 </table>
 
                 <div class="total">
-                    Итоговая сумма: %s ₽
-                </div>
+            
+                        <p>
+                            Сумма без скидки:
+                            %s ₽
+                        </p>
+            
+                        <p>
+                            Скидка:
+                            %s%% (%s ₽)
+                        </p>
+            
+                        <p>
+                            Итоговая сумма:
+                            %s ₽
+                        </p>
+            
+                    </div>
 
             </body>
 
@@ -181,13 +223,16 @@ public class ReceiptService {
                 order.getDateOfPurchase().format(formatter),
                 order.getDateOfDelivery().format(formatter),
                 itemsHtml.toString(),
-                order.getTotalPrice()
+                originalTotal,
+                discountPercent,
+                discountAmount,
+                finalTotal
         );
     }
 
-    private Order findAccessibleOrder(Long orderId,
-                                      String currentUsername,
-                                      boolean adminMode) {
+    private @NonNull Order findAccessibleOrder(Long orderId,
+                                               String currentUsername,
+                                               boolean adminMode) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() ->
                         new RuntimeException("Order not found")

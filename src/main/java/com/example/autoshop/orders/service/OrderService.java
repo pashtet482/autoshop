@@ -200,7 +200,7 @@ public class OrderService {
         orderRepository.deleteById(id);
     }
 
-    private User findUserById(Long id) {
+    private @NonNull User findUserById(Long id) {
 
         return userRepository.findById(id)
                 .orElseThrow(() ->
@@ -208,14 +208,14 @@ public class OrderService {
                 );
     }
 
-    private User findUserByUsername(String username) {
+    private @NonNull User findUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден")
                 );
     }
 
-    private Product findProductById(Long id) {
+    private @NonNull Product findProductById(Long id) {
 
         return productRepository.findById(id)
                 .orElseThrow(() ->
@@ -223,9 +223,9 @@ public class OrderService {
                 );
     }
 
-    private Order findAccessibleOrder(Long id,
-                                      String currentUsername,
-                                      boolean adminMode) {
+    private @NonNull Order findAccessibleOrder(Long id,
+                                               String currentUsername,
+                                               boolean adminMode) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден")
