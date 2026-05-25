@@ -646,7 +646,7 @@ async function editProduct(id) {
         form.oemNumber.value = product.oemNumber || '';
         const imageUrl = getProductImage(product);
         const preview = document.getElementById('productImagePreview');
-        if (preview) preview.innerHTML = imageUrl ? `<img src="${esc(imageUrl)}" style="max-width:140px;">` : '';
+        if (preview) preview.innerHTML = imageUrl ? `<img src="${esc(imageUrl)}" style="max-width:140px;" alt={product.name}>` : '';
         form.description.value = product.description || '';
     }
 
@@ -839,8 +839,8 @@ async function loadOrders() {
             const purchaseDate = order.dateOfPurchase ? new Date(order.dateOfPurchase) : null;
             if (!purchaseDate) return false;
             if (dateFrom && purchaseDate < new Date(`${dateFrom}T00:00:00`)) return false;
-            if (dateTo && purchaseDate > new Date(`${dateTo}T23:59:59`)) return false;
-            return true;
+            return !(dateTo && purchaseDate > new Date(`${dateTo}T23:59:59`));
+
         });
     const toggle = document.getElementById('toggleAllOrders');
     const hint = document.getElementById('ordersPageHint');
@@ -1345,7 +1345,7 @@ async function editUser(id) {
         document.getElementById('userId').value = user.id;
         form.username.value = user.username || '';
         form.email.value = user.email || '';
-        form.deliveryAddress.value = user.deliveryAddress || '';
+        fillDeliveryAddressFields(user.deliveryAddress || '', form);
         form.companyName.value = user.companyName || '';
         form.phone.value = user.phone || '';
         form.role.value = user.role || 'USER';
@@ -1397,7 +1397,7 @@ async function loadPriceLevels() {
     listEl.innerHTML = levels.map(l => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0"><div>${esc(l.name)} (x${l.ratio})</div><div><button class="btn secondary" data-edit-pricelevel="${l.id}">Изменить</button> <button class="btn danger" data-delete-pricelevel="${l.id}">Удалить</button></div></div>`).join('');
     listEl.querySelectorAll('[data-edit-pricelevel]').forEach(btn => btn.addEventListener('click', async () => {
         const id = btn.dataset.editPricelevel;
-        const pl = levels.find(x => x.id == id);
+        const pl = levels.find(x => x.id === id);
         document.getElementById('priceLevelId').value = pl.id;
         const form = document.getElementById('priceLevelForm');
         form.name.value = pl.name;
@@ -1432,7 +1432,7 @@ async function saveUser(event) {
         username: form.username.value.trim(),
         password: form.password.value || null,
         email: form.email.value.trim(),
-        deliveryAddress: form.deliveryAddress.value.trim(),
+        deliveryAddress: collectDeliveryAddress(form),
         companyName: form.companyName.value.trim(),
         phone: form.phone.value.trim(),
         role: form.role.value,

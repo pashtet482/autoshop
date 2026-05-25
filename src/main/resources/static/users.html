@@ -38,7 +38,14 @@
                     <div class="field"><label>Телефон</label><input name="phone" required></div>
                 </div>
                 <div class="field"><label>Компания</label><input name="companyName" required></div>
-                <div class="field"><label>Адрес доставки</label><input name="deliveryAddress"></div>
+                <div class="address-fields" data-address-fields>
+                    <div class="inline-fields">
+                        <div class="field"><label>Город / населенный пункт</label><input name="deliveryCity" required></div>
+                        <div class="field"><label>Почтовый индекс</label><input name="deliveryPostalCode" inputmode="numeric" pattern="[0-9]{6}" required></div>
+                    </div>
+                    <div class="field"><label>Улица, дом, корпус/строение</label><input name="deliveryStreet" required></div>
+                    <div class="field"><label>Квартира / офис</label><input name="deliveryApartment"></div>
+                </div>
                 <div class="inline-fields">
                     <div class="field"><label>Роль</label><select name="role" required><option value="USER">USER</option><option value="ADMIN">ADMIN</option></select></div>
                     <div class="field"><label>Уровень цены</label><select name="priceLevelId" required><option value="">-- Выберите уровень цены --</option></select></div>
