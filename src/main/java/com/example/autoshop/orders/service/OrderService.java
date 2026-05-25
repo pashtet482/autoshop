@@ -260,7 +260,7 @@ public class OrderService {
                 .subtract(ratio)
                 .multiply(BigDecimal.valueOf(100));
         BigDecimal calculatedTaxAmount = discountedSubtotal.multiply(taxPercent)
-                .divide(BigDecimal.valueOf(100));
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
         return new OrderDTO(
                 base.id(),
